@@ -9,7 +9,7 @@
 
 ## Gandalf in a nutshell
 
-While frodo and sam's were running away from Balrog, Gandalf said "You shall not pass" making them to be safe. This service works like an oauth2 server, it will logs user into the system by creating tokens.
+While frodo and sam were running away from Balrog, Gandalf said "You shall not pass" making them to be safe. This service works like an oauth2 server, it will logs user into the system by creating tokens.
 
 ## Local development
 
