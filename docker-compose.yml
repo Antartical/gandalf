@@ -1,0 +1,53 @@
+version: '3'
+services:
+
+  ##############################################################################
+  #                                   PELIPPER                                 #
+  ##############################################################################
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports: 
+      - 1025:1025
+      - 8025:8025
+    networks:
+      - mailhog-network
+
+  pelipper:
+    image: ghcr.io/antartical/pelipper
+    container_name: pelipper
+    ports:
+      - "9000:9000"
+    environment:
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=admin
+      - SMTP_PASSWORD=admin
+
+  ##############################################################################
+  #                                 GANDALF                                    #
+  ##############################################################################
+  gandalf:
+    build:
+      context: .
+      dockerfile: build/docker/dockerfile.local
+    container_name: gandalf
+    restart: always
+    command: "gin --appPort 9000 --all -i run main.go"
+    volumes:
+      - ./:/api/
+    ports:
+      - "9100:9100"
+    env_file:
+      - ./build/env/.env
+    networks:
+      - pelipper-network
+
+################################################################################
+#                                   NETWORKS                                   #
+################################################################################
+networks:
+  mailhog-network:
+    driver: bridge
+  pelipper-network:
+    driver: bridge
