@@ -28,10 +28,12 @@ logs:
 sh:
 	@docker exec -it gandalf /bin/sh
 
-docker_tag_and_push:
+docker.login:
+	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
+
+docker_tag_and_push: docker.login
 	@export TAG=$(date +%d%m%Y-%H%M%S)
 	@docker build -f build/docker/dockerfile.prod -t $(REGISTRY):latest -t $(REGISTRY):$(TAG) .
-	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
 	@docker push $(REGISTRY):$(TAG)
 	@docker push $(REGISTRY):latest
 
