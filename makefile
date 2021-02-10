@@ -19,6 +19,9 @@ local.coverage.generate_report:
 local.coverage.open_report:
 	@go tool cover -html=coverage.out
 
+docker.login:
+	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
+
 ci.test:
 	@docker exec gandalf go test -v -covermode=count -coverprofile=coverage.out ./...
 
@@ -28,9 +31,6 @@ logs:
 sh:
 	@docker exec -it gandalf /bin/sh
 
-docker.login:
-	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
-
 docker_tag_and_push: docker.login
 	@export TAG=$(date +%d%m%Y-%H%M%S)
 	@docker build -f build/docker/dockerfile.prod -t $(REGISTRY):latest -t $(REGISTRY):$(TAG) .
@@ -39,11 +39,13 @@ docker_tag_and_push: docker.login
 
 start: local.start
 
+start_ci: docker.login local.start
+
 stop: local.down
 
 coverage_report: local.coverage.generate_report local.coverage.open_report
 
-ci_check_tests: local.start ci.test
+ci_check_tests: docker.login local.start ci.test
 
 renew: local.down local.build local.start
 
