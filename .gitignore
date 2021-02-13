@@ -17,4 +17,5 @@ vendor/
 # Generated from live server and local files
 .env
 gin-bin
+.vscode/
 
