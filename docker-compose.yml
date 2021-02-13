@@ -11,7 +11,7 @@ services:
       - 1025:1025
       - 8025:8025
     networks:
-      - mailhog-network
+      - pelipper-network
 
   pelipper:
     image: ghcr.io/antartical/pelipper
@@ -23,6 +23,34 @@ services:
       - SMTP_PORT=1025
       - SMTP_USER=admin
       - SMTP_PASSWORD=admin
+    networks:
+      - pelipper-network
+
+  ##############################################################################
+  #                                 DATABASE                                   #
+  ##############################################################################
+  postgres:
+    image: postgres:13.1-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=frodo
+    ports:
+      - "5432:5432"
+    volumes:
+      - antartical.frodo:/var/lib/postgresql/data
+    networks:
+      - gandalf-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - gandalf-network
 
   ##############################################################################
   #                                 GANDALF                                    #
@@ -41,13 +69,14 @@ services:
     env_file:
       - ./build/env/.env
     networks:
+      - gandalf-network
       - pelipper-network
 
 ################################################################################
 #                                   NETWORKS                                   #
 ################################################################################
 networks:
-  mailhog-network:
+  gandalf-network:
     driver: bridge
   pelipper-network:
     driver: bridge
