@@ -2,6 +2,8 @@ package connections
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,12 +24,49 @@ type configOpenRecorder struct {
 	config    *gorm.Config
 }
 
-func TestPostgresConnection(t *testing.T) {
+func TestGormPostgresConnection(t *testing.T) {
 	assert := require.New(t)
+
+	t.Run("Test constructor", func(t *testing.T) {
+		connection := NewGormPostgresConnection()
+		assert.Equal(connection.Host, os.Getenv("POSTGRES_HOST"))
+		assert.Equal(connection.Port, os.Getenv("POSTGRES_PORT"))
+		assert.Equal(connection.User, os.Getenv("POSTGRES_USER"))
+		assert.Equal(connection.Password, os.Getenv("POSTGRES_PASSWORD"))
+		assert.Equal(connection.Name, os.Getenv("POSTGRES_DB"))
+	})
+
+	t.Run("Test generate postgres DSN", func(t *testing.T) {
+		host := "test"
+		port := "test"
+		user := "test"
+		password := "test"
+		name := "test"
+		expectedDSN := fmt.Sprintf(
+			"host=%v port=%v user=%v dbname=%v password=%v sslmode=disable",
+			host,
+			port,
+			user,
+			name,
+			password,
+		)
+
+		mockedOpen, _ := mockConfigOpen(nil)
+		mockedConnection := GormPostgresConnection{
+			Host:     host,
+			Port:     port,
+			User:     user,
+			Password: password,
+			Name:     name,
+			open:     mockedOpen,
+		}
+
+		assert.Equal(mockedConnection.getPostgresDSN(), expectedDSN)
+	})
 
 	t.Run("Setup connection successfully", func(t *testing.T) {
 		mockedOpen, recorder := mockConfigOpen(nil)
-		mockedConfig := ConnectionConfig{
+		mockedConnection := GormPostgresConnection{
 			Host:     "Test",
 			Port:     "Test",
 			User:     "Test",
@@ -36,14 +75,15 @@ func TestPostgresConnection(t *testing.T) {
 			open:     mockedOpen,
 		}
 
-		PostgresConnection(mockedConfig)
+		mockedConnection.Connect()
+
 		assert.Equal(recorder.config, &gorm.Config{})
-		assert.Equal(recorder.dialector, postgres.Open(mockedConfig.PostgresDSN()))
+		assert.Equal(recorder.dialector, postgres.Open(mockedConnection.getPostgresDSN()))
 	})
 
 	t.Run("Setup connection error", func(t *testing.T) {
 		mockedOpen, _ := mockConfigOpen(errors.New("connection error"))
-		mockedConfig := ConnectionConfig{
+		mockedConnection := GormPostgresConnection{
 			Host:     "Test",
 			Port:     "Test",
 			User:     "Test",
@@ -52,6 +92,7 @@ func TestPostgresConnection(t *testing.T) {
 			open:     mockedOpen,
 		}
 
-		assert.PanicsWithValue(&PostgresConnectionError{}, func() { PostgresConnection(mockedConfig) })
+		expectedError := DatabaseConnectionError{mockedConnection.getPostgresDSN()}
+		assert.PanicsWithError(expectedError.Error(), func() { mockedConnection.Connect() })
 	})
 }

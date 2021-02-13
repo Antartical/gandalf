@@ -2,19 +2,58 @@ package connections
 
 import (
 	"fmt"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 /*
-PostgresConnection -> initializes postgres conection
+GormPostgresConnection -> postgres gorm connection
 */
-func PostgresConnection(config ConnectionConfig) *gorm.DB {
-	db, err := config.open(postgres.Open(config.PostgresDSN()), &gorm.Config{})
+type GormPostgresConnection struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
+	open     func(gorm.Dialector, *gorm.Config) (*gorm.DB, error)
+}
+
+/*
+Connect -> return the database connection
+*/
+func (connection GormPostgresConnection) Connect() *gorm.DB {
+	addr := connection.getPostgresDSN()
+	db, err := connection.open(postgres.Open(addr), &gorm.Config{})
 	if err != nil {
-		panic(&PostgresConnectionError{})
+		panic(&DatabaseConnectionError{addr})
 	}
 	fmt.Println("-> Connected to postgres <-")
 	return db
+}
+
+func (connection GormPostgresConnection) getPostgresDSN() string {
+	return fmt.Sprintf(
+		"host=%v port=%v user=%v dbname=%v password=%v sslmode=disable",
+		connection.Host,
+		connection.Port,
+		connection.User,
+		connection.Name,
+		connection.Password,
+	)
+}
+
+/*
+NewGormPostgresConnection -> returns new postgres connection
+*/
+func NewGormPostgresConnection() GormPostgresConnection {
+	return GormPostgresConnection{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     os.Getenv("POSTGRES_PORT"),
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		Name:     os.Getenv("POSTGRES_DB"),
+		open:     gorm.Open,
+	}
 }

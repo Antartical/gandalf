@@ -1,11 +1,14 @@
 package connections
 
-/*
-PostgresConnectionError -> this error will be returned on postgres
-connection fail.
-*/
-type PostgresConnectionError struct{}
+import "fmt"
 
-func (e *PostgresConnectionError) Error() string {
-	return "Error connecting postgres"
+/*
+DatabaseConnectionError -> this error will be returned on connection failure.
+*/
+type DatabaseConnectionError struct {
+	addr string
+}
+
+func (e DatabaseConnectionError) Error() string {
+	return fmt.Sprintf("Error connecting database `addr`:%s", e.addr)
 }
