@@ -32,7 +32,7 @@ func (u *User) checkOrSetHasher() {
 
 /*
 SetPassword -> set user password by hashing the given one. If not hasher is
-present, defaultHasher will be used as default
+present, checkOrSetHasher will set the default one.
 */
 func (u *User) SetPassword(password string) {
 	u.checkOrSetHasher()
@@ -45,7 +45,7 @@ func (u *User) SetPassword(password string) {
 
 /*
 VerifyPassword -> verify if the given password match with the user one. If not
-hasher is present, defaultHasher will be used as default
+hasher is present, checkOrSetHasher will set the default one.
 */
 func (u User) VerifyPassword(password string) bool {
 	u.checkOrSetHasher()
