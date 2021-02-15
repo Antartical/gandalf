@@ -10,8 +10,8 @@ type UserCreateData struct {
 	Password string    `json:"password" binding:"required,alphanumunicode,min=10"`
 	Name     string    `json:"name" binding:"required,alphaunicode"`
 	Surname  string    `json:"surname" binding:"required,alphaunicode"`
-	Birthday time.Time `json:"birthday" binding:"required,datetime"`
-	Phone    string    `json:"phone" binding:"e164"`
+	Birthday time.Time `json:"birthday" binding:"required"`
+	Phone    string    `json:"phone" binding:"omitempty,e164"`
 }
 
 /*

@@ -7,14 +7,23 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
+
+/*
+RegisterUserRoutes -> register user endpoints to the given router
+*/
+func RegisterUserRoutes(router *gin.Engine, userService services.IUserService) {
+	users := router.Group("/users")
+	users.Use(func(c *gin.Context) {
+		c.Set("userService", userService)
+	})
+	users.POST("", CreateUser)
+}
 
 /*
 CreateUser -> creates a new user
 */
 func CreateUser(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
 	userService := c.MustGet("userService").(services.IUserService)
 
 	var input validators.UserCreateData
@@ -23,7 +32,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := userService.Create(db, input)
+	user, err := userService.Create(input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

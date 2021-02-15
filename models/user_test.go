@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -39,6 +40,22 @@ func newMockedHasher(generatePasswordError error, verifyPasswordError error) *mo
 
 func TestUserModel(t *testing.T) {
 	assert := require.New(t)
+
+	t.Run("Test constructor", func(t *testing.T) {
+		email := "test@example.com"
+		name := "test"
+		surname := "test test"
+		birthday := time.Now()
+		phone := "+34666"
+
+		user := NewUser(email, "test", name, surname, birthday, phone)
+
+		assert.Equal(user.Email, email)
+		assert.Equal(user.Name, name)
+		assert.Equal(user.Surname, surname)
+		assert.Equal(user.Birthday, birthday)
+		assert.Equal(user.Phone, phone)
+	})
 
 	t.Run("Test checkOrSetHasher with default", func(t *testing.T) {
 		user := User{}

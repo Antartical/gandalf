@@ -63,3 +63,19 @@ func (u User) VerifyPassword(password string) bool {
 	}
 	return true
 }
+
+/*
+NewUser -> creates a new user
+*/
+func NewUser(email string, password string, name string, surname string, birthday time.Time, phone string) User {
+	user := User{
+		Email:    email,
+		Name:     name,
+		Surname:  surname,
+		Birthday: birthday,
+		Phone:    phone,
+		hasher:   security.NewBcryptHasher(),
+	}
+	user.SetPassword(password)
+	return user
+}
