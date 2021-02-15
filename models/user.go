@@ -5,6 +5,7 @@ import (
 
 	"gandalf/security"
 
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -13,15 +14,22 @@ User -> the user itself
 */
 type User struct {
 	gorm.Model
-	Photo    string
-	Phone    string
-	Email    string          `gorm:"not null;index:usr_email;unique"`
-	Password string          `gorm:"not null"`
-	Name     string          `gorm:"not null"`
-	Surname  string          `gorm:"not null"`
-	Birthday time.Time       `gorm:"not null"`
-	verified bool            `gorm:"default:false"`
-	hasher   security.Hasher `gorm:"-"`
+
+	// Mandatory fields
+	UUID     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+	Email    string    `gorm:"not null;index:usr_email;unique"`
+	Password string    `gorm:"not null"`
+	Name     string    `gorm:"not null"`
+	Surname  string    `gorm:"not null"`
+	Birthday time.Time `gorm:"not null"`
+	verified bool      `gorm:"default:false"`
+
+	// Optional fields
+	Photo string
+	Phone string
+
+	// Untracked fields
+	hasher security.Hasher `gorm:"-"`
 }
 
 func (u *User) checkOrSetHasher() {
