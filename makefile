@@ -19,7 +19,15 @@ local.coverage.generate_report:
 local.coverage.open_report:
 	@go tool cover -html=coverage.out
 
-docker.login:
+local.check.credentials:
+	@if ! [ -s ~/.credentials/ghcr.name ]; then \
+    	python3 build/scripts/ghcr.py; \
+    fi
+
+local.docker.login: local.check.credentials
+	@cat ~/.credentials/ghcr.token | docker login https://docker.pkg.github.com -u $(shell cat ~/.credentials/ghcr.name) --password-stdin
+
+ci.docker.login:
 	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
 
 ci.test:
@@ -31,13 +39,13 @@ logs:
 sh:
 	@docker exec -it gandalf /bin/sh
 
-docker_tag_and_push: docker.login
+docker_tag_and_push: ci.docker.login
 	@export TAG=$(date +%d%m%Y-%H%M%S)
 	@docker build -f build/docker/dockerfile.prod -t $(REGISTRY):latest -t $(REGISTRY):$(TAG) .
 	@docker push $(REGISTRY):$(TAG)
 	@docker push $(REGISTRY):latest
 
-start: local.start
+start: local.docker.login local.start
 
 start_ci: docker.login local.start
 
