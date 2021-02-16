@@ -42,19 +42,19 @@ type mockUserService struct {
 	deleteError error
 }
 
-func (service *mockUserService) Create(userData validators.UserCreateData) (models.User, error) {
+func (service *mockUserService) Create(userData validators.UserCreateData) (*models.User, error) {
 	*service.createRecorder = createRecorder{userData: userData}
-	return models.User{}, service.createError
+	return &models.User{}, service.createError
 }
 
-func (service *mockUserService) Read(uuid uuid.UUID) (models.User, error) {
+func (service *mockUserService) Read(uuid uuid.UUID) (*models.User, error) {
 	*service.readRecorder = uuidRecorder{uuid: uuid}
-	return models.User{}, service.readError
+	return &models.User{}, service.readError
 }
 
-func (service *mockUserService) Update(uuid uuid.UUID, userData validators.UserUpdateData) (models.User, error) {
+func (service *mockUserService) Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error) {
 	*service.updateRecorder = updateRecorder{uuid: uuid, userData: userData}
-	return models.User{}, service.updateError
+	return &models.User{}, service.updateError
 }
 
 func (service *mockUserService) Delete(uuid uuid.UUID) error {

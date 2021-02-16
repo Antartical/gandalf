@@ -38,5 +38,5 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, serializers.NewUserSerializer(user))
+	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
 }
