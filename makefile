@@ -65,13 +65,11 @@ docker_tag_and_push: ci.docker.login
 
 start: local.docker.login local.start
 
-start_ci: ci.docker.login local.start
-
 stop: local.down
 
 coverage_report: local.coverage.generate_report local.coverage.open_report
 
-ci_check_tests: docker.login local.start ci.test
+ci_check_tests:ci.docker.login local.start ci.test
 
 renew: local.down local.build local.start
 
