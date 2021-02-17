@@ -1,10 +1,9 @@
 package services
 
 import (
-	"gandalf/connections"
+	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
-
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -14,8 +13,7 @@ func TestUserServiceCreate(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test user create successfully", func(t *testing.T) {
-		db := connections.NewGormPostgresConnection().Connect()
-		service := UserService{db}
+		service := UserService{tests.NewTestDatabase(true)}
 		userData := validators.UserCreateData{
 			Email:    "test@test.com",
 			Password: "testestestestest",
@@ -34,6 +32,20 @@ func TestUserServiceCreate(t *testing.T) {
 	})
 
 	t.Run("Test user create database error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+		userData := validators.UserCreateData{
+			Email:    "test@test.com",
+			Password: "testestestestest",
+			Name:     "test",
+			Surname:  "test",
+			Birthday: time.Now(),
+		}
 
+		user, _ := service.Create(userData)
+		_, err := service.Create(userData)
+
+		assert.Error(err)
+		db.Unscoped().Delete(&user)
 	})
 }

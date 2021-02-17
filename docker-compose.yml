@@ -36,10 +36,12 @@ services:
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=frodo
+      - POSTGRES_MULTIPLE_DATABASES=frodo,test
+      - POSTGRES_EXTENSIONS=uuid-ossp
     ports:
       - "5432:5432"
     volumes:
+      - ./build/extra:/docker-entrypoint-initdb.d
       - antartical.frodo:/var/lib/postgresql/data
     networks:
       - gandalf-network

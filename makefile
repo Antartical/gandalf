@@ -10,10 +10,25 @@ local.start:
 local.down:
 	@docker-compose down
 
-local.test:
+local.reset.test_db:
+	@echo "============================"
+	@echo "= Setting up test database ="
+	@echo "============================"
+	@docker exec postgres psql -U root -d postgres -c "DROP DATABASE IF EXISTS test;" >> /dev/null
+	@docker exec postgres psql -U root -d postgres -c "CREATE DATABASE test;" >> /dev/null
+	@docker exec postgres psql -U root -d postgres -d test -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'>> /dev/null
+	@echo "-> Test database created <-"
+
+local.test: local.reset.test_db
+	@echo "\n============================"
+	@echo "=     launching tests      ="
+	@echo "============================"
 	@docker exec gandalf go test ./... -cover
 
-local.coverage.generate_report:
+local.coverage.generate_report: local.reset.test_db
+	@echo "\n============================"
+	@echo "=     launching tests      ="
+	@echo "============================"
 	@docker exec gandalf go test -coverprofile coverage.out ./...
 
 local.coverage.open_report:
@@ -25,7 +40,10 @@ local.check.credentials:
     fi
 
 local.docker.login: local.check.credentials
-	@cat ~/.credentials/ghcr.token | docker login https://docker.pkg.github.com -u $(shell cat ~/.credentials/ghcr.name) --password-stdin
+	@cat ~/.credentials/ghcr.token | docker login ghcr.io -u $(shell cat ~/.credentials/ghcr.name) --password-stdin
+
+migration:
+	@docker exec gandalf goose -dir migrations postgres "user=$(POSTGRES_USER) password=$(POSTGRES_PASSWORD) dbname=$(POSTGRES_DB) sslmode=disable" create sql
 
 ci.docker.login:
 	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
@@ -37,7 +55,7 @@ logs:
 	@docker logs -f $(shell docker-compose ps -q gandalf)
 
 sh:
-	@docker exec -it gandalf /bin/sh
+	@docker exec -it gandalf /bin/bash
 
 docker_tag_and_push: ci.docker.login
 	@export TAG=$(date +%d%m%Y-%H%M%S)
@@ -47,7 +65,7 @@ docker_tag_and_push: ci.docker.login
 
 start: local.docker.login local.start
 
-start_ci: docker.login local.start
+start_ci: ci.docker.login local.start
 
 stop: local.down
 

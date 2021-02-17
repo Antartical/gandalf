@@ -58,7 +58,7 @@ func TestGormPostgresConnection(t *testing.T) {
 			User:     user,
 			Password: password,
 			Name:     name,
-			open:     mockedOpen,
+			OpenDb:   mockedOpen,
 		}
 
 		assert.Equal(mockedConnection.getPostgresDSN(), expectedDSN)
@@ -72,7 +72,7 @@ func TestGormPostgresConnection(t *testing.T) {
 			User:     "Test",
 			Password: "Test",
 			Name:     "Test",
-			open:     mockedOpen,
+			OpenDb:   mockedOpen,
 		}
 
 		mockedConnection.Connect()
@@ -89,7 +89,7 @@ func TestGormPostgresConnection(t *testing.T) {
 			User:     "Test",
 			Password: "Test",
 			Name:     "Test",
-			open:     mockedOpen,
+			OpenDb:   mockedOpen,
 		}
 
 		expectedError := DatabaseConnectionError{mockedConnection.getPostgresDSN()}

@@ -17,7 +17,7 @@ type GormPostgresConnection struct {
 	User     string
 	Password string
 	Name     string
-	open     func(gorm.Dialector, *gorm.Config) (*gorm.DB, error)
+	OpenDb   func(gorm.Dialector, *gorm.Config) (*gorm.DB, error)
 }
 
 /*
@@ -25,7 +25,7 @@ Connect -> return the database connection
 */
 func (connection GormPostgresConnection) Connect() *gorm.DB {
 	addr := connection.getPostgresDSN()
-	db, err := connection.open(postgres.Open(addr), &gorm.Config{})
+	db, err := connection.OpenDb(postgres.Open(addr), &gorm.Config{})
 	if err != nil {
 		panic(&DatabaseConnectionError{addr})
 	}
@@ -54,6 +54,6 @@ func NewGormPostgresConnection() GormPostgresConnection {
 		User:     os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		Name:     os.Getenv("POSTGRES_DB"),
-		open:     gorm.Open,
+		OpenDb:   gorm.Open,
 	}
 }
