@@ -69,6 +69,8 @@ stop: local.down
 
 coverage_report: local.coverage.generate_report local.coverage.open_report
 
+tests: local.test
+
 ci_check_tests:ci.docker.login local.start ci.test
 
 renew: local.down local.build local.start
