@@ -98,33 +98,99 @@ func TestUserServiceRead(t *testing.T) {
 
 }
 
-// func TestUserServiceUpdate(t *testing.T) {
-// 	assert := require.New(t)
+func TestUserServiceUpdate(t *testing.T) {
+	assert := require.New(t)
 
-// 	t.Run("Test update user successfully", func(t *testing.T) {
+	t.Run("Test update user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
 
-// 	})
+		user := userFactory()
+		db.Create(&user)
 
-// 	t.Run("Test update user not found error", func(t *testing.T) {
+		password := "NewPassword"
+		phone := "+34666666666"
+		userData := validators.UserUpdateData{
+			Password: password,
+			Phone:    phone,
+		}
 
-// 	})
+		updatedUser, err := service.Update(user.UUID, userData)
 
-// }
+		assert.NoError(err)
+		assert.Equal(updatedUser.Phone, phone)
+		assert.True(updatedUser.VerifyPassword(password))
 
-// func TestUserServiceDelete(t *testing.T) {
-// 	assert := require.New(t)
+		db.Unscoped().Delete(&user)
+	})
 
-// 	t.Run("Test delete user successfully", func(t *testing.T) {
+	t.Run("Test update user not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
 
-// 	})
+		user := userFactory()
+		userData := validators.UserUpdateData{
+			Password: "NewPassword",
+			Phone:    "+34666666666",
+		}
 
-// }
+		_, err := service.Update(user.UUID, userData)
 
-// func TestUserServiceSoftDelete(t *testing.T) {
-// 	assert := require.New(t)
+		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
 
-// 	t.Run("Test soft delete user successfully", func(t *testing.T) {
+}
 
-// 	})
+func TestUserServiceDelete(t *testing.T) {
+	assert := require.New(t)
 
-// }
+	t.Run("Test delete user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+		db.Create(&user)
+
+		err := service.Delete(user.UUID)
+		assert.NoError(err)
+	})
+
+	t.Run("Test delete user error not found", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+
+		err := service.Delete(user.UUID)
+		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestUserServiceSoftDelete(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test soft delete user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+		db.Create(&user)
+
+		err := service.SoftDelete(user.UUID)
+		assert.NoError(err)
+
+		db.Unscoped().Delete(&user)
+	})
+
+	t.Run("Test soft delete user error not found", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+
+		err := service.SoftDelete(user.UUID)
+		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
+
+}

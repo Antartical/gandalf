@@ -83,7 +83,10 @@ func (service UserService) Update(uuid uuid.UUID, userData validators.UserUpdate
 Delete -> removes the user which belongs to the given id from the database.
 */
 func (service UserService) Delete(uuid uuid.UUID) error {
-	return service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error
+	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
+		return UserNotFoundError{err}
+	}
+	return nil
 }
 
 /*
@@ -92,5 +95,8 @@ in database. Soft deleted users will not appear as result of any query that
 not includes `unscoped`
 */
 func (service UserService) SoftDelete(uuid uuid.UUID) error {
-	return service.db.Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error
+	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
+		return UserNotFoundError{err}
+	}
+	return nil
 }
