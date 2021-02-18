@@ -31,15 +31,17 @@ type updateRecorder struct {
 }
 
 type mockUserService struct {
-	createRecorder *createRecorder
-	readRecorder   *uuidRecorder
-	updateRecorder *updateRecorder
-	deleteRecorder *uuidRecorder
+	createRecorder     *createRecorder
+	readRecorder       *uuidRecorder
+	updateRecorder     *updateRecorder
+	deleteRecorder     *uuidRecorder
+	softdeleteRecorder *uuidRecorder
 
-	createError error
-	readError   error
-	updateError error
-	deleteError error
+	createError     error
+	readError       error
+	updateError     error
+	deleteError     error
+	softdeleteError error
 }
 
 func (service *mockUserService) Create(userData validators.UserCreateData) (*models.User, error) {
@@ -62,16 +64,23 @@ func (service *mockUserService) Delete(uuid uuid.UUID) error {
 	return service.deleteError
 }
 
-func newMockedService(createError error, readError error, updateError error, deleteError error) mockUserService {
+func (service *mockUserService) SoftDelete(uuid uuid.UUID) error {
+	*service.softdeleteRecorder = uuidRecorder{uuid: uuid}
+	return service.softdeleteError
+}
+
+func newMockedService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
 	return mockUserService{
-		createRecorder: new(createRecorder),
-		readRecorder:   new(uuidRecorder),
-		updateRecorder: new(updateRecorder),
-		deleteRecorder: new(uuidRecorder),
-		createError:    createError,
-		readError:      readError,
-		updateError:    updateError,
-		deleteError:    deleteError,
+		createRecorder:     new(createRecorder),
+		readRecorder:       new(uuidRecorder),
+		updateRecorder:     new(updateRecorder),
+		deleteRecorder:     new(uuidRecorder),
+		softdeleteRecorder: new(uuidRecorder),
+		createError:        createError,
+		readError:          readError,
+		updateError:        updateError,
+		deleteError:        deleteError,
+		softdeleteError:    softdeleteError,
 	}
 }
 
@@ -85,7 +94,7 @@ func TestCreateUser(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test create user successfully", func(t *testing.T) {
-		userService := newMockedService(nil, nil, nil, nil)
+		userService := newMockedService(nil, nil, nil, nil, nil)
 		router := setupUserRouter(&userService)
 		var response gin.H
 
@@ -117,7 +126,7 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("Test create user binding error", func(t *testing.T) {
-		userService := newMockedService(nil, nil, nil, nil)
+		userService := newMockedService(nil, nil, nil, nil, nil)
 		router := setupUserRouter(&userService)
 		var response gin.H
 
@@ -135,7 +144,7 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("Test create user service error", func(t *testing.T) {
 		expectedError := errors.New("create error")
-		userService := newMockedService(expectedError, nil, nil, nil)
+		userService := newMockedService(expectedError, nil, nil, nil, nil)
 		router := setupUserRouter(&userService)
 		var response gin.H
 

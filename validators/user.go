@@ -18,6 +18,6 @@ type UserCreateData struct {
 UserUpdateData -> user data for update
 */
 type UserUpdateData struct {
-	Password string `json:"password" binding:"required,alphanumunicode,min=10"`
-	Phone    string `json:"phone" binding:"e164"`
+	Password string `json:"password" binding:"omitempty,alphanumunicode,min=10"`
+	Phone    string `json:"phone" binding:"omitempty,e164"`
 }

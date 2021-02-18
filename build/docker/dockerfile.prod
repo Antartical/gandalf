@@ -26,6 +26,7 @@ RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
 COPY --from=builder /${GOPATH}/bin/goose /bin/goose
+COPY ./migrations ./migrations
 
 EXPOSE 9100
 

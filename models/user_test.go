@@ -57,20 +57,12 @@ func TestUserModel(t *testing.T) {
 		assert.Equal(user.Phone, phone)
 	})
 
-	t.Run("Test checkOrSetHasher with default", func(t *testing.T) {
+	t.Run("Test AfterFind gorm hook", func(t *testing.T) {
 		user := User{}
-		user.checkOrSetHasher()
+		err := user.AfterFind(nil)
 
+		assert.NoError(err)
 		assert.NotNil(user.hasher)
-	})
-
-	t.Run("Test checkOrSetHasher without modification", func(t *testing.T) {
-		hasher := newMockedHasher(nil, nil)
-		user := User{hasher: hasher}
-
-		user.checkOrSetHasher()
-
-		assert.Equal(hasher, user.hasher)
 	})
 
 	t.Run("Test SetPassword successfully", func(t *testing.T) {
