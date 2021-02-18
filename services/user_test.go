@@ -45,7 +45,7 @@ func TestUserServiceCreate(t *testing.T) {
 		user, _ := service.Create(userData)
 		_, err := service.Create(userData)
 
-		assert.Error(err)
+		assert.Error(err, UserCreateError{nil}.Error())
 		db.Unscoped().Delete(&user)
 	})
 }
