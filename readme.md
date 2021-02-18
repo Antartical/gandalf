@@ -21,9 +21,21 @@ cp ./build/env/.env.sample ./build/env/.env
 ```
 
 Moreover you can perform the following operations:
+ - **make**: setting up the containers
  - **make sh**: attach a console inside gandalf.
  - **make logs**: show gandalf logs
  - **make local.build**: recompiles gandalf image
+ - **make tests**: launch tests
+ - **make coverage_report**: open coverage report
+
+## Migrations
+In order to create new migrations, pleass follow the next steps:
+ - **make**: if you have never setting up the containers
+ - **make sh**: attach a shell to the `gandalf` container
+ - **mgo create <migration_name> sql**: generates a new migration file in the `/migrations` directory
+
+Write in the generated file the migration in SQL, Moreover make sure to run `mgo fix` when you had test your
+migration in order to rename it automatically by adding a sequential number
 
 ## Configure pre-commit (Python3 required)
 pre-commit is a useful tool which checks your files before any commit push preventings fails in early steps.

@@ -10,6 +10,7 @@ WORKDIR /api
 
 COPY go.mod .
 COPY go.sum .
+RUN go get -u github.com/pressly/goose/cmd/goose
 RUN go mod download
 
 COPY ./ ./
@@ -18,11 +19,14 @@ RUN go build -o ./app main.go
 FROM alpine:latest
 ENV GIN_MODE=release
 ENV GANDALF_PORT=9100
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+RUN apk update && apk add ca-certificates bash && rm -rf /var/cache/apk/*
+COPY ./build/config/.bashrc /root/.bashrc
 
 RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app .
+COPY --from=builder /${GOPATH}/bin/goose /bin/goose
+COPY ./migrations ./migrations
 
 EXPOSE 9100
 
