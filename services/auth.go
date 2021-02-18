@@ -91,5 +91,8 @@ func (service AuthService) Authenticate(token string) (*models.User, error) {
 		return nil, AuthenticationError{nil}
 	}
 
+	user.LastLogin = time.Now()
+	service.db.Save(&user)
+
 	return &user, nil
 }
