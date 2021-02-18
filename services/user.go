@@ -27,6 +27,13 @@ type UserService struct {
 }
 
 /*
+NewUserService -> creates a new user service
+*/
+func NewUserService(db *gorm.DB) UserService {
+	return UserService{db}
+}
+
+/*
 Create -> creates a new user
 */
 func (service UserService) Create(userData validators.UserCreateData) (*models.User, error) {

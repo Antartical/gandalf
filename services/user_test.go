@@ -28,6 +28,17 @@ func userFactory() models.User {
 	)
 }
 
+func TestUserServiceConstructor(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test constructor", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		service := NewUserService(db)
+
+		assert.Equal(service.db, db)
+	})
+}
+
 func TestUserServiceCreate(t *testing.T) {
 	assert := require.New(t)
 
