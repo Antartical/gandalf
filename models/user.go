@@ -14,6 +14,7 @@ User -> the user itself
 */
 type User struct {
 	gorm.Model
+	LastLogin time.Time
 
 	// Mandatory fields
 	UUID     uuid.UUID `gorm:"index:usr_uuid;unique;type:uuid;default:uuid_generate_v4()"`
@@ -22,7 +23,7 @@ type User struct {
 	Name     string    `gorm:"not null"`
 	Surname  string    `gorm:"not null"`
 	Birthday time.Time `gorm:"not null"`
-	verified bool      `gorm:"default:false"`
+	Verified bool      `gorm:"default:false"`
 
 	// Optional fields
 	Photo string
