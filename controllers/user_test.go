@@ -86,7 +86,7 @@ func newMockedService(createError error, readError error, updateError error, del
 
 func setupUserRouter(userService services.IUserService) *gin.Engine {
 	router := gin.Default()
-	RegisterUserRoutes(router, userService)
+	RegisterUserRoutes(router, nil, userService)
 	return router
 }
 
