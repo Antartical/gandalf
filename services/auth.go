@@ -4,28 +4,69 @@ import (
 	"errors"
 	"gandalf/models"
 	"gandalf/validators"
+	"os"
 	"time"
 
+	set "github.com/deckarep/golang-set"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
 /*
-AccessTokenClaims -> JWT for accessing resources
+Auth scopes
 */
-type AccessTokenClaims struct {
+const (
+	ScopeUserRead           = "user:read"
+	ScopeUserChangePassword = "user:change-password"
+	ScopeUserWrite          = "user:write"
+	ScopeUserDelete         = "user:delete"
+)
+
+/*
+accessTokenClaims -> JWT for accessing resources
+*/
+type accessTokenClaims struct {
 	jwt.StandardClaims
-	UUID  uuid.UUID
-	Email string
+	UUID   uuid.UUID
+	Email  string
+	Scopes set.Set
 }
 
 /*
-RefreshTokenClaims -> JWT for refreshing access token
+newAccessTokenClaims -> creates claims for the access token from the given
+params
 */
-type RefreshTokenClaims struct {
+func newAccessTokenClaims(user models.User, scopes set.Set, ttl time.Duration) accessTokenClaims {
+	return accessTokenClaims{
+		UUID:   user.UUID,
+		Email:  user.Email,
+		Scopes: scopes,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(ttl * time.Minute).Unix(),
+		},
+	}
+}
+
+/*
+refreshTokenClaims -> JWT for refreshing access token
+*/
+type refreshTokenClaims struct {
 	jwt.StandardClaims
 	UUID uuid.UUID
+}
+
+/*
+newRefreshTokenClaims -> creates claims for the refresh token from the given
+params
+*/
+func newRefreshTokenClaims(user models.User, ttl time.Duration) refreshTokenClaims {
+	return refreshTokenClaims{
+		UUID: user.UUID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(ttl * time.Minute).Unix(),
+		},
+	}
 }
 
 /*
@@ -40,9 +81,10 @@ type AuthTokens struct {
 IAuthService -> interface for auth service
 */
 type IAuthService interface {
-	Authenticate(credentials validators.Credentials) (*AuthTokens, error)
-	Authorize(accessToken string) (*models.User, error)
-	Refresh(accessToken string, refreshToken string) (*AuthTokens, error)
+	Authenticate(credentials validators.Credentials) (*models.User, error)
+	GenerateTokens(user models.User, scopes set.Set) AuthTokens
+	GetAuthorizedUser(accessToken string, scopes set.Set) (*models.User, error)
+	RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error)
 }
 
 /*
@@ -53,22 +95,34 @@ type AuthService struct {
 	tokenTTL  time.Duration `env:"JWT_TOKEN_TTL"`
 	tokenRTTL time.Duration `env:"JWT_TOKEN_RTTL"`
 	tokenKey  string        `env:"JWT_TOKEN_KEY"`
+
+	parseTokenWithClaims func(tokenString string, claims jwt.Claims, keyFunc jwt.Keyfunc) (*jwt.Token, error)
+	newTokenWithClaims   func(method jwt.SigningMethod, claims jwt.Claims) *jwt.Token
+	keyfunc              func(token *jwt.Token) (interface{}, error)
 }
 
 /*
 NewAuthService -> creates a new auth service
 */
 func NewAuthService(db *gorm.DB) AuthService {
-	return AuthService{db: db}
+
+	keyfunc := func(token *jwt.Token) (interface{}, error) {
+		return os.Getenv("JWT_TOKEN_KEY"), nil
+	}
+
+	return AuthService{
+		db:                   db,
+		parseTokenWithClaims: jwt.ParseWithClaims,
+		newTokenWithClaims:   jwt.NewWithClaims,
+		keyfunc:              keyfunc,
+	}
 }
 
 /*
 getClaims -> Get token claims
 */
 func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInvalid bool) error {
-	tkn, err := jwt.ParseWithClaims(token, data, func(token *jwt.Token) (interface{}, error) {
-		return service.tokenKey, nil
-	})
+	tkn, err := service.parseTokenWithClaims(token, data, service.keyfunc)
 
 	if err != nil || (!tkn.Valid && errorOnInvalid) {
 		return AuthorizationError{err}
@@ -78,9 +132,21 @@ func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInval
 }
 
 /*
-Authenticate -> authenticate a user and return his identification tokens
+signToken -> sign the given token with the private key
 */
-func (service AuthService) Authenticate(credentials validators.Credentials) (*AuthTokens, error) {
+func (service AuthService) signToken(token *jwt.Token) string {
+	signedToken, err := token.SignedString(service.tokenKey)
+	if err != nil {
+		panic(err)
+	}
+	return signedToken
+}
+
+/*
+Authenticate -> authenticates an user with the given credentials and
+returns it
+*/
+func (service AuthService) Authenticate(credentials validators.Credentials) (*models.User, error) {
 	var user models.User
 	if err := service.db.Where(&models.User{Email: credentials.Email}).First(&user).Error; err != nil {
 		return nil, AuthenticationError{err}
@@ -90,42 +156,38 @@ func (service AuthService) Authenticate(credentials validators.Credentials) (*Au
 		return nil, AuthenticationError{nil}
 	}
 
-	accessClaims := &AccessTokenClaims{
-		UUID:  user.UUID,
-		Email: user.Email,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(service.tokenTTL * time.Minute).Unix(),
-		},
-	}
-	refreshClaims := &RefreshTokenClaims{
-		UUID: user.UUID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(service.tokenRTTL * time.Minute).Unix(),
-		},
-	}
-
-	accessToken, aerr := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(service.tokenKey)
-	refreshToken, rerr := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString(service.tokenKey)
-
-	if aerr != nil {
-		return nil, AuthenticationError{aerr}
-	}
-	if rerr != nil {
-		return nil, AuthenticationError{rerr}
-	}
-
-	return &AuthTokens{accessToken, refreshToken}, nil
+	return &user, nil
 }
 
 /*
-Authorize -> authenticates an user by the given token
+GenerateTokens -> generate a pair access token for the given user with the
+given scopes
 */
-func (service AuthService) Authorize(token string) (*models.User, error) {
-	var accessClaims AccessTokenClaims
+func (service AuthService) GenerateTokens(user models.User, scopes set.Set) AuthTokens {
+	accessToken := service.signToken(service.newTokenWithClaims(
+		jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, service.tokenTTL),
+	))
+	refreshToken := service.signToken(service.newTokenWithClaims(
+		jwt.SigningMethodHS256, newRefreshTokenClaims(user, service.tokenRTTL),
+	))
+
+	return AuthTokens{accessToken, refreshToken}
+}
+
+/*
+GetAuthorizedUser -> return the user who perform the request if he has
+been authorized with the given scopes
+*/
+func (service AuthService) GetAuthorizedUser(token string, scopes set.Set) (*models.User, error) {
+	var accessClaims accessTokenClaims
 	err := service.getClaims(token, accessClaims, true)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if !scopes.IsSubset(accessClaims.Scopes) {
+		return nil, AuthorizationError{errors.New("No scopes")}
 	}
 
 	var user models.User
@@ -140,11 +202,11 @@ func (service AuthService) Authorize(token string) (*models.User, error) {
 }
 
 /*
-Refresh -> refresh the access token with his refresh one
+RefreshToken -> refresh the access token with his refresh one
 */
-func (service AuthService) Refresh(accessToken string, refreshToken string) (*AuthTokens, error) {
-	var accessClaims AccessTokenClaims
-	var refreshClaims RefreshTokenClaims
+func (service AuthService) RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error) {
+	var accessClaims accessTokenClaims
+	var refreshClaims refreshTokenClaims
 
 	aerr := service.getClaims(accessToken, accessClaims, false)
 	rerr := service.getClaims(refreshToken, refreshClaims, true)
@@ -161,7 +223,7 @@ func (service AuthService) Refresh(accessToken string, refreshToken string) (*Au
 	}
 
 	accessClaims.ExpiresAt = time.Now().Add(service.tokenTTL * time.Minute).Unix()
-	newAccessToken, naerr := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(service.tokenKey)
+	newAccessToken, naerr := service.newTokenWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(service.tokenKey)
 
 	if naerr != nil {
 		return nil, AuthenticationError{aerr}

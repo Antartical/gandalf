@@ -3,8 +3,10 @@ package middlewares
 import (
 	"errors"
 	"gandalf/models"
-	"gandalf/services"
+	auth "gandalf/services"
 	"strings"
+
+	set "github.com/deckarep/golang-set"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +15,7 @@ import (
 IAuthBearerMiddleware -> interface for auth based on bearer token middleware
 */
 type IAuthBearerMiddleware interface {
-	Authorize() gin.HandlerFunc
+	HasResourceReadPermission() gin.HandlerFunc
 	GetAuthorizedUser(c *gin.Context) *models.User
 }
 
@@ -22,27 +24,29 @@ AuthBearerMiddleware -> auth middleware for authenticate users with
 Bearer tokens
 */
 type AuthBearerMiddleware struct {
-	authService services.IAuthService
+	authService auth.IAuthService
 }
 
 /*
 NewAuthBearerMiddleware -> creates a new auth middleware.
 */
-func NewAuthBearerMiddleware(authService services.IAuthService) AuthBearerMiddleware {
+func NewAuthBearerMiddleware(authService auth.IAuthService) AuthBearerMiddleware {
 	return AuthBearerMiddleware{authService: authService}
 }
 
 /*
-Authorize -> identifies the user who perform the request and
-return it if him has permissions.
+HasResourceReadPermission -> check if the user who perform the request can
+read the resource he tries to access.
 */
-func (middleware AuthBearerMiddleware) Authorize() gin.HandlerFunc {
+func (middleware AuthBearerMiddleware) HasResourceReadPermission() gin.HandlerFunc {
+	scopes := set.NewSet([]interface{}{auth.ScopeUserRead})
+
 	return func(c *gin.Context) {
 		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer")
 		if len(bearer) < 2 {
 			c.AbortWithError(400, errors.New("Invalid authorization header"))
 		}
-		user, err := middleware.authService.Authorize(bearer[1])
+		user, err := middleware.authService.GetAuthorizedUser(bearer[1], scopes)
 		if err != nil {
 			c.AbortWithError(403, err)
 		}
