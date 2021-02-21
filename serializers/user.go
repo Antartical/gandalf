@@ -16,7 +16,6 @@ type UserSerializer struct {
 	Name     string    `json:"name"`
 	Surname  string    `json:"surname"`
 	Birthday time.Time `json:"birthday"`
-	Photo    string    `json:"photo"`
 	Phone    string    `json:"phone"`
 }
 
@@ -31,7 +30,6 @@ func NewUserSerializer(user models.User) UserSerializer {
 		Name:     user.Name,
 		Surname:  user.Surname,
 		Birthday: user.Birthday,
-		Photo:    user.Photo,
 		Phone:    user.Phone,
 	}
 }

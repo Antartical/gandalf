@@ -18,6 +18,7 @@ Auth scopes
 */
 const (
 	ScopeUserRead           = "user:read"
+	ScopeUserVerify         = "user:verify"
 	ScopeUserChangePassword = "user:change-password"
 	ScopeUserWrite          = "user:write"
 	ScopeUserDelete         = "user:delete"
@@ -148,7 +149,7 @@ returns it
 */
 func (service AuthService) Authenticate(credentials validators.Credentials) (*models.User, error) {
 	var user models.User
-	if err := service.db.Where(&models.User{Email: credentials.Email}).First(&user).Error; err != nil {
+	if err := service.db.Where(&models.User{Email: credentials.Email, Verified: true}).First(&user).Error; err != nil {
 		return nil, AuthenticationError{err}
 	}
 
@@ -187,12 +188,12 @@ func (service AuthService) GetAuthorizedUser(token string, scopes set.Set) (*mod
 	}
 
 	if !scopes.IsSubset(accessClaims.Scopes) {
-		return nil, AuthorizationError{errors.New("No scopes")}
+		return nil, AuthorizationError{errors.New("Unauthorized")}
 	}
 
 	var user models.User
 	if err := service.db.Where(&models.User{UUID: accessClaims.UUID, Email: accessClaims.Email, Verified: true}).First(&user).Error; err != nil {
-		return nil, AuthorizationError{nil}
+		return nil, AuthorizationError{errors.New("Related user does not exist")}
 	}
 
 	user.LastLogin = time.Now()
@@ -211,23 +212,16 @@ func (service AuthService) RefreshToken(accessToken string, refreshToken string)
 	aerr := service.getClaims(accessToken, accessClaims, false)
 	rerr := service.getClaims(refreshToken, refreshClaims, true)
 
-	if aerr != nil {
-		return nil, AuthenticationError{aerr}
-	}
-	if rerr != nil {
-		return nil, AuthenticationError{rerr}
+	if aerr != nil || rerr != nil {
+		return nil, AuthenticationError{errors.New("Unrecognized token")}
 	}
 
 	if accessClaims.UUID != refreshClaims.UUID {
-		return nil, AuthenticationError{errors.New("Access and refresh tokens uuids did not match")}
+		return nil, AuthenticationError{errors.New("Unrelated access and refresh token")}
 	}
 
 	accessClaims.ExpiresAt = time.Now().Add(service.tokenTTL * time.Minute).Unix()
-	newAccessToken, naerr := service.newTokenWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(service.tokenKey)
-
-	if naerr != nil {
-		return nil, AuthenticationError{aerr}
-	}
+	newAccessToken := service.signToken(service.newTokenWithClaims(jwt.SigningMethodHS256, accessClaims))
 
 	return &AuthTokens{newAccessToken, refreshToken}, nil
 }

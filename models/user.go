@@ -26,7 +26,6 @@ type User struct {
 	Verified bool      `gorm:"default:false"`
 
 	// Optional fields
-	Photo string
 	Phone string
 
 	// Untracked fields

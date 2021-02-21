@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"gandalf/middlewares"
 	"gandalf/models"
 	"gandalf/services"
 	"gandalf/validators"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	set "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
@@ -84,9 +86,41 @@ func newMockedService(createError error, readError error, updateError error, del
 	}
 }
 
-func setupUserRouter(userService services.IUserService) *gin.Engine {
+type mockAuthBearerMiddleware struct {
+	hasScopesCalled         bool
+	requestedScopes         *set.Set
+	getAuthorizedUserCalled bool
+}
+
+func newMockAuthBearerMiddleware() *mockAuthBearerMiddleware {
+	return &mockAuthBearerMiddleware{false, new(set.Set), false}
+}
+
+func (middleware *mockAuthBearerMiddleware) HasScopes(scopes set.Set) gin.HandlerFunc {
+	middleware.hasScopesCalled = true
+	middleware.requestedScopes = &scopes
+	user := models.NewUser(
+		"test@test.com",
+		"testestestestest",
+		"test",
+		"test",
+		time.Now(),
+		"+34666666666",
+	)
+
+	return func(c *gin.Context) {
+		c.Set("authorizedUser", user)
+	}
+}
+
+func (middleware *mockAuthBearerMiddleware) GetAuthorizedUser(c *gin.Context) *models.User {
+	middleware.getAuthorizedUserCalled = true
+	return c.MustGet("authorizedUser").(*models.User)
+}
+
+func setupUserRouter(authBearerMiddleware middlewares.IAuthBearerMiddleware, userService services.IUserService) *gin.Engine {
 	router := gin.Default()
-	RegisterUserRoutes(router, nil, userService)
+	RegisterUserRoutes(router, authBearerMiddleware, userService)
 	return router
 }
 
@@ -95,7 +129,8 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("Test create user successfully", func(t *testing.T) {
 		userService := newMockedService(nil, nil, nil, nil, nil)
-		router := setupUserRouter(&userService)
+		authBearerMiddleware := newMockAuthBearerMiddleware()
+		router := setupUserRouter(authBearerMiddleware, &userService)
 		var response gin.H
 
 		email := "test@test.com"
@@ -123,11 +158,13 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(userService.createRecorder.userData.Name, name)
 		assert.Equal(userService.createRecorder.userData.Surname, surname)
 		assert.Equal(userService.createRecorder.userData.Birthday, birthdayDat)
+		assert.False(authBearerMiddleware.hasScopesCalled)
+		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
 	})
 
 	t.Run("Test create user binding error", func(t *testing.T) {
 		userService := newMockedService(nil, nil, nil, nil, nil)
-		router := setupUserRouter(&userService)
+		router := setupUserRouter(newMockAuthBearerMiddleware(), &userService)
 		var response gin.H
 
 		payload, _ := json.Marshal(map[string]string{
@@ -145,7 +182,7 @@ func TestCreateUser(t *testing.T) {
 	t.Run("Test create user service error", func(t *testing.T) {
 		expectedError := errors.New("create error")
 		userService := newMockedService(expectedError, nil, nil, nil, nil)
-		router := setupUserRouter(&userService)
+		router := setupUserRouter(newMockAuthBearerMiddleware(), &userService)
 		var response gin.H
 
 		email := "test@test.com"

@@ -19,13 +19,15 @@ func RegisterUserRoutes(
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
 	userService services.IUserService,
 ) {
-	routes := router.Group("/users")
 	controller := UserController{
 		userService:       userService,
 		getAuthorizedUser: authBearerMiddleware.GetAuthorizedUser,
 	}
 
-	routes.POST("", controller.CreateUser)
+	publicRoutes := router.Group("/users")
+	{
+		publicRoutes.POST("", controller.CreateUser)
+	}
 }
 
 /*

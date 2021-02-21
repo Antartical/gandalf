@@ -11,7 +11,6 @@ CREATE TABLE users (
     name text NOT NULL,
     surname text NOT NULL,
     birthday timestamptz NOT NULL,
-    photo text,
     phone text
 );
 -- +goose StatementEnd

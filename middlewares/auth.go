@@ -15,7 +15,7 @@ import (
 IAuthBearerMiddleware -> interface for auth based on bearer token middleware
 */
 type IAuthBearerMiddleware interface {
-	HasResourceReadPermission() gin.HandlerFunc
+	HasScopes(scopes set.Set) gin.HandlerFunc
 	GetAuthorizedUser(c *gin.Context) *models.User
 }
 
@@ -35,12 +35,9 @@ func NewAuthBearerMiddleware(authService auth.IAuthService) AuthBearerMiddleware
 }
 
 /*
-HasResourceReadPermission -> check if the user who perform the request can
-read the resource he tries to access.
+HasScopes -> check if the user who perform the request has the given scopes
 */
-func (middleware AuthBearerMiddleware) HasResourceReadPermission() gin.HandlerFunc {
-	scopes := set.NewSet([]interface{}{auth.ScopeUserRead})
-
+func (middleware AuthBearerMiddleware) HasScopes(scopes set.Set) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer")
 		if len(bearer) < 2 {
