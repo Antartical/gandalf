@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"gandalf/models"
 	"gandalf/validators"
 	"os"
@@ -134,7 +133,6 @@ func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInval
 	tkn, err := service.parseTokenWithClaims(token, data, service.keyfunc)
 
 	if err != nil || (!tkn.Valid && errorOnInvalid) {
-		fmt.Println(err)
 		return AuthorizationError{err}
 	}
 

@@ -37,14 +37,17 @@ HasScopes -> check if the user who perform the request has the given scopes
 */
 func (middleware AuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer")
+		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer ")
 		if len(bearer) < 2 {
 			c.AbortWithError(400, errors.New("Invalid authorization header"))
+			return
 		}
 		user, err := middleware.authService.GetAuthorizedUser(bearer[1], scopes)
 		if err != nil {
 			c.AbortWithError(403, err)
+			return
 		}
+
 		c.Set("authorizedUser", user)
 	}
 }
