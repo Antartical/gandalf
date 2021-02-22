@@ -6,8 +6,6 @@ import (
 	auth "gandalf/services"
 	"strings"
 
-	set "github.com/deckarep/golang-set"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +13,7 @@ import (
 IAuthBearerMiddleware -> interface for auth based on bearer token middleware
 */
 type IAuthBearerMiddleware interface {
-	HasScopes(scopes set.Set) gin.HandlerFunc
+	HasScopes(scopes []string) gin.HandlerFunc
 	GetAuthorizedUser(c *gin.Context) *models.User
 }
 
@@ -37,7 +35,7 @@ func NewAuthBearerMiddleware(authService auth.IAuthService) AuthBearerMiddleware
 /*
 HasScopes -> check if the user who perform the request has the given scopes
 */
-func (middleware AuthBearerMiddleware) HasScopes(scopes set.Set) gin.HandlerFunc {
+func (middleware AuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer")
 		if len(bearer) < 2 {

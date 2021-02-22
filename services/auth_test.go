@@ -1,30 +1,113 @@
 package services
 
 import (
+	"gandalf/tests"
+	"os"
+	"strconv"
 	"testing"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
+
+	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/require"
 )
 
+type parseClaimsRecorder struct {
+	tokenString string
+	claims      jwt.Claims
+}
+
 func TestAuthService(t *testing.T) {
-	//assert := require.New(t)
+	assert := require.New(t)
 
 	t.Run("Test constructor", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		authService := NewAuthService(db)
 
+		expectedTokenTTL, _ := strconv.Atoi(os.Getenv("JWT_TOKEN_TTL"))
+		expectedTokenRTTL, _ := strconv.Atoi(os.Getenv("JWT_TOKEN_RTTL"))
+
+		assert.Equal(authService.tokenKey, []byte(os.Getenv("JWT_TOKEN_KEY")))
+		assert.Equal(authService.tokenTTL, time.Duration(expectedTokenTTL))
+		assert.Equal(authService.tokenRTTL, time.Duration(expectedTokenRTTL))
 	})
 
 	t.Run("Test getClaims successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		authService := NewAuthService(db)
 
+		user := userFactory()
+		user.UUID, _ = uuid.NewV4()
+		scopes := []string{ScopeUserRead}
+		mockToken := authService.signToken(authService.newTokenWithClaims(
+			jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
+		))
+
+		claims := &accessTokenClaims{}
+		err := authService.getClaims(mockToken, claims, true)
+
+		assert.NoError(err)
+		assert.Equal(claims.UUID, user.UUID)
+		assert.Equal(claims.Scopes, scopes)
 	})
 
 	t.Run("Test getClaims error", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		authService := NewAuthService(db)
+		raisedError := errors.New("wrong")
+		recorder := &parseClaimsRecorder{}
+		authService.parseTokenWithClaims = func(tokenString string, claims jwt.Claims, keyFunc jwt.Keyfunc) (*jwt.Token, error) {
+			recorder.tokenString = tokenString
+			recorder.claims = claims
+			return nil, raisedError
+		}
 
+		user := userFactory()
+		user.UUID, _ = uuid.NewV4()
+		scopes := []string{ScopeUserRead}
+		mockToken := authService.signToken(authService.newTokenWithClaims(
+			jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
+		))
+
+		claims := &accessTokenClaims{}
+		err := authService.getClaims(mockToken, claims, true)
+
+		assert.Error(err, AuthorizationError{raisedError}.Error())
+		assert.Equal(recorder.tokenString, mockToken)
+		assert.Equal(recorder.claims, claims)
 	})
 
 	t.Run("Test signToken successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		authService := NewAuthService(db)
 
+		user := userFactory()
+		user.UUID, _ = uuid.NewV4()
+		scopes := []string{ScopeUserRead}
+
+		assert.NotPanics(func() {
+			authService.signToken(authService.newTokenWithClaims(
+				jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
+			))
+		})
 	})
 
 	t.Run("Test signToken panics", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		authService := NewAuthService(db)
+		authService.tokenKey = "string"
 
+		user := userFactory()
+		user.UUID, _ = uuid.NewV4()
+		scopes := []string{ScopeUserRead}
+
+		assert.Panics(func() {
+			authService.signToken(authService.newTokenWithClaims(
+				jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
+			))
+		})
 	})
 
 	t.Run("Test Authenticate successfully", func(t *testing.T) {

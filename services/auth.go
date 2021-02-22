@@ -2,12 +2,14 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"gandalf/models"
 	"gandalf/validators"
 	"os"
+	"strconv"
 	"time"
 
-	set "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
@@ -31,14 +33,14 @@ type accessTokenClaims struct {
 	jwt.StandardClaims
 	UUID   uuid.UUID
 	Email  string
-	Scopes set.Set
+	Scopes []string
 }
 
 /*
 newAccessTokenClaims -> creates claims for the access token from the given
 params
 */
-func newAccessTokenClaims(user models.User, scopes set.Set, ttl time.Duration) accessTokenClaims {
+func newAccessTokenClaims(user models.User, scopes []string, ttl time.Duration) accessTokenClaims {
 	return accessTokenClaims{
 		UUID:   user.UUID,
 		Email:  user.Email,
@@ -83,8 +85,8 @@ IAuthService -> interface for auth service
 */
 type IAuthService interface {
 	Authenticate(credentials validators.Credentials) (*models.User, error)
-	GenerateTokens(user models.User, scopes set.Set) AuthTokens
-	GetAuthorizedUser(accessToken string, scopes set.Set) (*models.User, error)
+	GenerateTokens(user models.User, scopes []string) AuthTokens
+	GetAuthorizedUser(accessToken string, scopes []string) (*models.User, error)
 	RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error)
 }
 
@@ -95,7 +97,7 @@ type AuthService struct {
 	db        *gorm.DB
 	tokenTTL  time.Duration `env:"JWT_TOKEN_TTL"`
 	tokenRTTL time.Duration `env:"JWT_TOKEN_RTTL"`
-	tokenKey  string        `env:"JWT_TOKEN_KEY"`
+	tokenKey  interface{}   `env:"JWT_TOKEN_KEY"`
 
 	parseTokenWithClaims func(tokenString string, claims jwt.Claims, keyFunc jwt.Keyfunc) (*jwt.Token, error)
 	newTokenWithClaims   func(method jwt.SigningMethod, claims jwt.Claims) *jwt.Token
@@ -108,11 +110,17 @@ NewAuthService -> creates a new auth service
 func NewAuthService(db *gorm.DB) AuthService {
 
 	keyfunc := func(token *jwt.Token) (interface{}, error) {
-		return os.Getenv("JWT_TOKEN_KEY"), nil
+		return []byte(os.Getenv("JWT_TOKEN_KEY")), nil
 	}
+
+	tokenTTL, _ := strconv.Atoi(os.Getenv("JWT_TOKEN_TTL"))
+	tokenRTTL, _ := strconv.Atoi(os.Getenv("JWT_TOKEN_RTTL"))
 
 	return AuthService{
 		db:                   db,
+		tokenTTL:             time.Duration(tokenTTL),
+		tokenRTTL:            time.Duration(tokenRTTL),
+		tokenKey:             []byte(os.Getenv("JWT_TOKEN_KEY")),
 		parseTokenWithClaims: jwt.ParseWithClaims,
 		newTokenWithClaims:   jwt.NewWithClaims,
 		keyfunc:              keyfunc,
@@ -137,6 +145,7 @@ signToken -> sign the given token with the private key
 */
 func (service AuthService) signToken(token *jwt.Token) string {
 	signedToken, err := token.SignedString(service.tokenKey)
+	fmt.Println(err)
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +173,7 @@ func (service AuthService) Authenticate(credentials validators.Credentials) (*mo
 GenerateTokens -> generate a pair access token for the given user with the
 given scopes
 */
-func (service AuthService) GenerateTokens(user models.User, scopes set.Set) AuthTokens {
+func (service AuthService) GenerateTokens(user models.User, scopes []string) AuthTokens {
 	accessToken := service.signToken(service.newTokenWithClaims(
 		jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, service.tokenTTL),
 	))
@@ -179,7 +188,7 @@ func (service AuthService) GenerateTokens(user models.User, scopes set.Set) Auth
 GetAuthorizedUser -> return the user who perform the request if he has
 been authorized with the given scopes
 */
-func (service AuthService) GetAuthorizedUser(token string, scopes set.Set) (*models.User, error) {
+func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*models.User, error) {
 	var accessClaims accessTokenClaims
 	err := service.getClaims(token, accessClaims, true)
 
@@ -187,7 +196,7 @@ func (service AuthService) GetAuthorizedUser(token string, scopes set.Set) (*mod
 		return nil, err
 	}
 
-	if !scopes.IsSubset(accessClaims.Scopes) {
+	if !mapset.NewSet(scopes).IsSubset(mapset.NewSet(accessClaims.Scopes)) {
 		return nil, AuthorizationError{errors.New("Unauthorized")}
 	}
 

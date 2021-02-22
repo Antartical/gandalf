@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	set "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
@@ -88,15 +87,15 @@ func newMockedService(createError error, readError error, updateError error, del
 
 type mockAuthBearerMiddleware struct {
 	hasScopesCalled         bool
-	requestedScopes         *set.Set
+	requestedScopes         *[]string
 	getAuthorizedUserCalled bool
 }
 
 func newMockAuthBearerMiddleware() *mockAuthBearerMiddleware {
-	return &mockAuthBearerMiddleware{false, new(set.Set), false}
+	return &mockAuthBearerMiddleware{false, new([]string), false}
 }
 
-func (middleware *mockAuthBearerMiddleware) HasScopes(scopes set.Set) gin.HandlerFunc {
+func (middleware *mockAuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
 	middleware.hasScopesCalled = true
 	middleware.requestedScopes = &scopes
 	user := models.NewUser(
