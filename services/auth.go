@@ -134,6 +134,7 @@ func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInval
 	tkn, err := service.parseTokenWithClaims(token, data, service.keyfunc)
 
 	if err != nil || (!tkn.Valid && errorOnInvalid) {
+		fmt.Println(err)
 		return AuthorizationError{err}
 	}
 
@@ -145,7 +146,6 @@ signToken -> sign the given token with the private key
 */
 func (service AuthService) signToken(token *jwt.Token) string {
 	signedToken, err := token.SignedString(service.tokenKey)
-	fmt.Println(err)
 	if err != nil {
 		panic(err)
 	}
@@ -189,14 +189,23 @@ GetAuthorizedUser -> return the user who perform the request if he has
 been authorized with the given scopes
 */
 func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*models.User, error) {
-	var accessClaims accessTokenClaims
+	accessClaims := &accessTokenClaims{}
 	err := service.getClaims(token, accessClaims, true)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if !mapset.NewSet(scopes).IsSubset(mapset.NewSet(accessClaims.Scopes)) {
+	mandatoryScopes := mapset.NewSet()
+	for _, elem := range scopes {
+		mandatoryScopes.Add(elem)
+	}
+	tokenScopes := mapset.NewSet()
+	for _, elem := range accessClaims.Scopes {
+		tokenScopes.Add(elem)
+	}
+
+	if !mandatoryScopes.IsSubset(tokenScopes) {
 		return nil, AuthorizationError{errors.New("Unauthorized")}
 	}
 
@@ -215,8 +224,8 @@ func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*mo
 RefreshToken -> refresh the access token with his refresh one
 */
 func (service AuthService) RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error) {
-	var accessClaims accessTokenClaims
-	var refreshClaims refreshTokenClaims
+	accessClaims := &accessTokenClaims{}
+	refreshClaims := &refreshTokenClaims{}
 
 	aerr := service.getClaims(accessToken, accessClaims, false)
 	rerr := service.getClaims(refreshToken, refreshClaims, true)

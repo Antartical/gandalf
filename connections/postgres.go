@@ -29,7 +29,6 @@ func (connection GormPostgresConnection) Connect() *gorm.DB {
 	if err != nil {
 		panic(&DatabaseConnectionError{addr})
 	}
-	fmt.Println("-> Connected to postgres <-")
 	return db
 }
 
