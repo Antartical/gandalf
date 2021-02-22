@@ -4,6 +4,7 @@ import (
 	"errors"
 	"gandalf/models"
 	auth "gandalf/services"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -39,12 +40,12 @@ func (middleware AuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFun
 	return func(c *gin.Context) {
 		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer ")
 		if len(bearer) < 2 {
-			c.AbortWithError(400, errors.New("Invalid authorization header"))
+			c.AbortWithError(http.StatusBadRequest, errors.New("Invalid authorization header"))
 			return
 		}
 		user, err := middleware.authService.GetAuthorizedUser(bearer[1], scopes)
 		if err != nil {
-			c.AbortWithError(403, err)
+			c.AbortWithError(http.StatusForbidden, err)
 			return
 		}
 
