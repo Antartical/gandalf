@@ -1,12 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"gandalf/middlewares"
-	"gandalf/models"
 	"gandalf/serializers"
 	"gandalf/services"
 	"gandalf/validators"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,13 +18,15 @@ RegisterUserRoutes -> register user endpoints to the given router
 func RegisterUserRoutes(
 	router *gin.Engine,
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
+	authService services.IAuthService,
 	userService services.IUserService,
-	//pelipper services.IPelipperService,
+	pelipperService services.IPelipperService,
 ) {
 	controller := UserController{
-		userService: userService,
-		//pelipper:          pelipper,
-		getAuthorizedUser: authBearerMiddleware.GetAuthorizedUser,
+		authService:     authService,
+		userService:     userService,
+		pelipperService: pelipperService,
+		authMiddleware:  authBearerMiddleware,
 	}
 
 	publicRoutes := router.Group("/users")
@@ -44,9 +47,10 @@ func RegisterUserRoutes(
 UserController -> controller fot /users endpoints
 */
 type UserController struct {
-	userService       services.IUserService
-	pelipper          services.IPelipperService
-	getAuthorizedUser func(c *gin.Context) *models.User
+	authService     services.IAuthService
+	userService     services.IUserService
+	pelipperService services.IPelipperService
+	authMiddleware  middlewares.IAuthBearerMiddleware
 }
 
 /*
@@ -65,15 +69,19 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	//verifyToken :=
+	verifyToken := controller.authService.GenerateTokens(
+		*user, []string{services.ScopeUserVerify},
+	).AccessToken
 	emailData := validators.PelipperUserVerifyEmail{
-		Email:            user.Email,
-		Name:             user.Name,
-		Subject:          "Welcome",
-		VerificationLink: "",
+		Email:   user.Email,
+		Name:    user.Name,
+		Subject: "Welcome",
+		VerificationLink: fmt.Sprintf(
+			"%s?code=%s", os.Getenv("EMAIL_VERIFICATION_URL"), verifyToken,
+		),
 	}
 
-	go controller.pelipper.SendUserVerifyEmail(emailData)
+	go controller.pelipperService.SendUserVerifyEmail(emailData)
 	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
 }
 
@@ -81,6 +89,6 @@ func (controller UserController) CreateUser(c *gin.Context) {
 VerificateUser -> verificates the user who perform the request
 */
 func (controller UserController) VerificateUser(c *gin.Context) {
-	controller.userService.Verificate(controller.getAuthorizedUser(c))
+	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
 	c.JSON(http.StatusOK, nil)
 }

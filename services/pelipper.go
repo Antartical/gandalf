@@ -49,7 +49,8 @@ func (service PelipperService) SendUserVerifyEmail(data validators.PelipperUserV
 	})
 
 	response, err := http.Post(fmt.Sprintf("%s/emails/users/verify", service.Host), "application/json", bytes.NewBuffer(payload))
-	if response.StatusCode != http.StatusCreated || err != nil {
+	if err != nil || response.StatusCode != http.StatusCreated {
+		log.Fatal(fmt.Sprintf("%s -> %s", err.Error(), service.Host))
 		log.Fatal(fmt.Sprintf("Verification email cannot be sended to %s", data.Email))
 	}
 }

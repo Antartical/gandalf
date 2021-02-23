@@ -189,6 +189,7 @@ been authorized with the given scopes
 func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*models.User, error) {
 	accessClaims := &accessTokenClaims{}
 	err := service.getClaims(token, accessClaims, true)
+	verified := true
 
 	if err != nil {
 		return nil, err
@@ -203,12 +204,18 @@ func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*mo
 		tokenScopes.Add(elem)
 	}
 
+	// It's mandatory to search on verified users, except on the verification
+	// endpoint
+	if mandatoryScopes.Contains(ScopeUserVerify) {
+		verified = false
+	}
+
 	if !mandatoryScopes.IsSubset(tokenScopes) {
 		return nil, AuthorizationError{errors.New("Unauthorized")}
 	}
 
 	var user models.User
-	if err := service.db.Where(&models.User{UUID: accessClaims.UUID, Email: accessClaims.Email, Verified: true}).First(&user).Error; err != nil {
+	if err := service.db.Where(&models.User{UUID: accessClaims.UUID, Email: accessClaims.Email, Verified: verified}).First(&user).Error; err != nil {
 		return nil, AuthorizationError{errors.New("Related user does not exist")}
 	}
 

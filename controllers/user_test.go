@@ -79,7 +79,7 @@ func (service *mockUserService) Verificate(*models.User) {
 	*service.verificateRecorder = verificateRecorder{called: true}
 }
 
-func newMockedService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
+func newMockedUserService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
 	return mockUserService{
 		createRecorder:     new(createRecorder),
 		readRecorder:       new(uuidRecorder),
@@ -108,9 +108,10 @@ func newMockAuthBearerMiddleware(authorizedUser *models.User) *mockAuthBearerMid
 }
 
 func (middleware *mockAuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
-	middleware.hasScopesCalled = true
-	middleware.requestedScopes = &scopes
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+		middleware.hasScopesCalled = true
+		middleware.requestedScopes = &scopes
+	}
 }
 
 func (middleware *mockAuthBearerMiddleware) GetAuthorizedUser(c *gin.Context) *models.User {
@@ -118,19 +119,48 @@ func (middleware *mockAuthBearerMiddleware) GetAuthorizedUser(c *gin.Context) *m
 	return middleware.authorizedUser
 }
 
-func setupUserRouter(authBearerMiddleware middlewares.IAuthBearerMiddleware, userService services.IUserService) *gin.Engine {
+func setupUserRouter(
+	authBearerMiddleware middlewares.IAuthBearerMiddleware,
+	authService services.IAuthService,
+	userService services.IUserService,
+	pelipperService services.IPelipperService,
+) *gin.Engine {
 	router := gin.Default()
-	RegisterUserRoutes(router, authBearerMiddleware, userService)
+	RegisterUserRoutes(
+		router, authBearerMiddleware,
+		authService, userService, pelipperService,
+	)
 	return router
+}
+
+type sendUserVerifyEmailRecorder struct {
+	data validators.PelipperUserVerifyEmail
+}
+type pelipperServiceMock struct {
+	sendUserVerifyEmailRecorder *sendUserVerifyEmailRecorder
+}
+
+func newPelipperServiceMock() *pelipperServiceMock {
+	return &pelipperServiceMock{
+		sendUserVerifyEmailRecorder: new(sendUserVerifyEmailRecorder),
+	}
+}
+
+func (service *pelipperServiceMock) SendUserVerifyEmail(data validators.PelipperUserVerifyEmail) {
+	service.sendUserVerifyEmailRecorder.data = data
 }
 
 func TestCreateUser(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test create user successfully", func(t *testing.T) {
-		userService := newMockedService(nil, nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
 		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(authBearerMiddleware, &userService)
+		router := setupUserRouter(
+			authBearerMiddleware, newMockedAuthService(nil, nil, nil, nil),
+			&userService, pelipperService,
+		)
 		var response gin.H
 
 		email := "test@test.com"
@@ -163,8 +193,12 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("Test create user binding error", func(t *testing.T) {
-		userService := newMockedService(nil, nil, nil, nil, nil)
-		router := setupUserRouter(newMockAuthBearerMiddleware(nil), &userService)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		router := setupUserRouter(
+			newMockAuthBearerMiddleware(nil),
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
 		var response gin.H
 
 		payload, _ := json.Marshal(map[string]string{
@@ -181,8 +215,12 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("Test create user service error", func(t *testing.T) {
 		expectedError := errors.New("create error")
-		userService := newMockedService(expectedError, nil, nil, nil, nil)
-		router := setupUserRouter(newMockAuthBearerMiddleware(nil), &userService)
+		userService := newMockedUserService(expectedError, nil, nil, nil, nil)
+		router := setupUserRouter(
+			newMockAuthBearerMiddleware(nil),
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
 		var response gin.H
 
 		email := "test@test.com"
@@ -221,9 +259,13 @@ func TestVerificateUser(t *testing.T) {
 			"+34666666666",
 		)
 		expectedScopes := []string{services.ScopeUserVerify}
-		userService := newMockedService(nil, nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
-		router := setupUserRouter(authMiddleware, &userService)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
 
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("PATCH", "/users/verify", bytes.NewBuffer([]byte{}))
@@ -233,6 +275,6 @@ func TestVerificateUser(t *testing.T) {
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.True(userService.verificateRecorder.called)
 		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
-		assert.Equal(authMiddleware.requestedScopes, expectedScopes)
+		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
 	})
 }

@@ -179,7 +179,7 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test GetAuthorizedUser successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead}
+		scopes := []string{ScopeUserRead, ScopeUserVerify}
 		user := userFactory()
 		user.Verified = true
 		db.Create(&user)
