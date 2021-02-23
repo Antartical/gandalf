@@ -18,11 +18,12 @@ import (
 
 func userFactory() models.User {
 	userData := validators.UserCreateData{
-		Email:    "test@test.com",
-		Password: "testestestestest",
-		Name:     "test",
-		Surname:  "test",
-		Birthday: time.Now(),
+		Email:           "test@test.com",
+		Password:        "testestestestest",
+		Name:            "test",
+		Surname:         "test",
+		Birthday:        time.Now(),
+		VerificationURL: "test",
 	}
 	return models.NewUser(
 		userData.Email,

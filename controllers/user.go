@@ -7,7 +7,6 @@ import (
 	"gandalf/services"
 	"gandalf/validators"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -78,7 +77,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 		Name:    user.Name,
 		Subject: "Welcome",
 		VerificationLink: fmt.Sprintf(
-			"%s?code=%s", os.Getenv("EMAIL_VERIFICATION_URL"), verifyToken,
+			"%s?code=%s", input.VerificationURL, verifyToken,
 		),
 	}
 
@@ -111,7 +110,7 @@ func (controller UserController) ResendVerificationEmail(c *gin.Context) {
 		Name:    user.Name,
 		Subject: "Welcome",
 		VerificationLink: fmt.Sprintf(
-			"%s?code=%s", os.Getenv("EMAIL_VERIFICATION_URL"), verifyToken,
+			"%s?code=%s", input.VerificationURL, verifyToken,
 		),
 	}
 	go controller.pelipperService.SendUserVerifyEmail(emailData)
