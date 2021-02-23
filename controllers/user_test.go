@@ -66,8 +66,8 @@ func (service *mockUserService) Read(uuid uuid.UUID) (*models.User, error) {
 }
 
 func (service *mockUserService) ReadByEmail(email string) (*models.User, error) {
-	service.readByEmailRecorder.email = email
-	return &models.User{}, service.readError
+	*service.readByEmailRecorder = emailRecorder{email: email}
+	return &models.User{Email: email}, service.readError
 }
 
 func (service *mockUserService) Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error) {
@@ -91,17 +91,18 @@ func (service *mockUserService) Verificate(*models.User) {
 
 func newMockedUserService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
 	return mockUserService{
-		createRecorder:     new(createRecorder),
-		readRecorder:       new(uuidRecorder),
-		updateRecorder:     new(updateRecorder),
-		deleteRecorder:     new(uuidRecorder),
-		softdeleteRecorder: new(uuidRecorder),
-		verificateRecorder: new(verificateRecorder),
-		createError:        createError,
-		readError:          readError,
-		updateError:        updateError,
-		deleteError:        deleteError,
-		softdeleteError:    softdeleteError,
+		createRecorder:      new(createRecorder),
+		readByEmailRecorder: new(emailRecorder),
+		readRecorder:        new(uuidRecorder),
+		updateRecorder:      new(updateRecorder),
+		deleteRecorder:      new(uuidRecorder),
+		softdeleteRecorder:  new(uuidRecorder),
+		verificateRecorder:  new(verificateRecorder),
+		createError:         createError,
+		readError:           readError,
+		updateError:         updateError,
+		deleteError:         deleteError,
+		softdeleteError:     softdeleteError,
 	}
 }
 
@@ -253,6 +254,89 @@ func TestCreateUser(t *testing.T) {
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
 		assert.Equal(response["error"], expectedError.Error())
+	})
+}
+
+func TestUserResendVerificationEmail(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test resend verification email successfully", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"email": email,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(userService.readByEmailRecorder.email, email)
+		assert.Equal(authService.generateTokensRecorder.user.Email, email)
+		assert.False(authBearerMiddleware.hasScopesCalled)
+		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
+	})
+
+	t.Run("Test resend verification email wrong payload", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"wrong": email,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("Test resend verification email not registered", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"email": email,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(userService.readByEmailRecorder.email, email)
+		assert.False(authBearerMiddleware.hasScopesCalled)
+		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
 	})
 }
 

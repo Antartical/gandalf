@@ -75,7 +75,7 @@ ReadByEmail -> read user from database by his email
 */
 func (service UserService) ReadByEmail(email string) (*models.User, error) {
 	var user models.User
-	if err := service.db.Where(&models.User{Email: email}).First(&user).Error; err != nil {
+	if err := service.db.Where(&models.User{Email: email, Verified: false}).First(&user).Error; err != nil {
 		return nil, UserNotFoundError{err}
 	}
 	return &user, nil

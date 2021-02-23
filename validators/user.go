@@ -3,6 +3,13 @@ package validators
 import "time"
 
 /*
+UserResendEmail -> user data for resend email notification
+*/
+type UserResendEmail struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+/*
 UserCreateData -> user data for creation
 */
 type UserCreateData struct {

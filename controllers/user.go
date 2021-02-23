@@ -32,6 +32,7 @@ func RegisterUserRoutes(
 	publicRoutes := router.Group("/users")
 	{
 		publicRoutes.POST("", controller.CreateUser)
+		publicRoutes.POST("/verify/resend", controller.ResendVerificationEmail)
 	}
 
 	verifyRoutes := router.Group("/users")
@@ -83,6 +84,38 @@ func (controller UserController) CreateUser(c *gin.Context) {
 
 	go controller.pelipperService.SendUserVerifyEmail(emailData)
 	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
+}
+
+/*
+ResendVerificationEmail -> resend the user verification email to the given
+one
+*/
+func (controller UserController) ResendVerificationEmail(c *gin.Context) {
+	var input validators.UserResendEmail
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := controller.userService.ReadByEmail(input.Email)
+	if err != nil {
+		c.JSON(http.StatusCreated, nil)
+		return
+	}
+
+	verifyToken := controller.authService.GenerateTokens(
+		*user, []string{services.ScopeUserVerify},
+	).AccessToken
+	emailData := validators.PelipperUserVerifyEmail{
+		Email:   user.Email,
+		Name:    user.Name,
+		Subject: "Welcome",
+		VerificationLink: fmt.Sprintf(
+			"%s?code=%s", os.Getenv("EMAIL_VERIFICATION_URL"), verifyToken,
+		),
+	}
+	go controller.pelipperService.SendUserVerifyEmail(emailData)
+	c.JSON(http.StatusCreated, nil)
 }
 
 /*
