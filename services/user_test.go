@@ -109,6 +109,35 @@ func TestUserServiceRead(t *testing.T) {
 
 }
 
+func TestUserServiceReadByEmail(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test read user by email successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+		db.Create(&user)
+
+		readUser, err := service.ReadByEmail(user.Email)
+
+		assert.NoError(err)
+		assert.Equal(user.ID, readUser.ID)
+
+		db.Unscoped().Delete(&user)
+	})
+
+	t.Run("Test read user by email not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+		user := userFactory()
+		_, err := service.ReadByEmail(user.Email)
+
+		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
+
+}
+
 func TestUserServiceUpdate(t *testing.T) {
 	assert := require.New(t)
 

@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"gandalf/validators"
+	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 )
 
@@ -24,6 +26,8 @@ send notifications to users
 type PelipperService struct {
 	Host        string
 	SMPTAccount string
+
+	post func(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
 /*
@@ -33,6 +37,7 @@ func NewPelipperService() PelipperService {
 	return PelipperService{
 		Host:        os.Getenv("PELIPPER_HOST"),
 		SMPTAccount: os.Getenv("PELIPPER_SMTP_ACCOUNT"),
+		post:        http.Post,
 	}
 }
 
@@ -47,10 +52,11 @@ func (service PelipperService) SendUserVerifyEmail(data validators.PelipperUserV
 		"subject":           data.Subject,
 		"verification_link": data.VerificationLink,
 	})
+	httptest.NewRecorder()
 
-	response, err := http.Post(fmt.Sprintf("%s/emails/users/verify", service.Host), "application/json", bytes.NewBuffer(payload))
+	response, err := service.post(fmt.Sprintf("%s/emails/users/verify", service.Host), "application/json", bytes.NewBuffer(payload))
 	if err != nil || response.StatusCode != http.StatusCreated {
-		log.Fatal(fmt.Sprintf("%s -> %s", err.Error(), service.Host))
-		log.Fatal(fmt.Sprintf("Verification email cannot be sended to %s", data.Email))
+		log.Println(fmt.Sprintf("%s -> %s", err.Error(), service.Host))
+		log.Println(fmt.Sprintf("Verification email cannot be sended to %s", data.Email))
 	}
 }

@@ -26,6 +26,10 @@ type uuidRecorder struct {
 	uuid uuid.UUID
 }
 
+type emailRecorder struct {
+	email string
+}
+
 type updateRecorder struct {
 	uuid     uuid.UUID
 	userData validators.UserUpdateData
@@ -36,12 +40,13 @@ type verificateRecorder struct {
 }
 
 type mockUserService struct {
-	createRecorder     *createRecorder
-	readRecorder       *uuidRecorder
-	updateRecorder     *updateRecorder
-	deleteRecorder     *uuidRecorder
-	softdeleteRecorder *uuidRecorder
-	verificateRecorder *verificateRecorder
+	createRecorder      *createRecorder
+	readRecorder        *uuidRecorder
+	readByEmailRecorder *emailRecorder
+	updateRecorder      *updateRecorder
+	deleteRecorder      *uuidRecorder
+	softdeleteRecorder  *uuidRecorder
+	verificateRecorder  *verificateRecorder
 
 	createError     error
 	readError       error
@@ -57,6 +62,11 @@ func (service *mockUserService) Create(userData validators.UserCreateData) (*mod
 
 func (service *mockUserService) Read(uuid uuid.UUID) (*models.User, error) {
 	*service.readRecorder = uuidRecorder{uuid: uuid}
+	return &models.User{}, service.readError
+}
+
+func (service *mockUserService) ReadByEmail(email string) (*models.User, error) {
+	service.readByEmailRecorder.email = email
 	return &models.User{}, service.readError
 }
 

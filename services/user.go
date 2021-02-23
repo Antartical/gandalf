@@ -16,6 +16,7 @@ type IUserService interface {
 	// CRUD operations
 	Create(userData validators.UserCreateData) (*models.User, error)
 	Read(uuid uuid.UUID) (*models.User, error)
+	ReadByEmail(email string) (*models.User, error)
 	Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error)
 	Delete(uuid uuid.UUID) error
 	SoftDelete(uuid uuid.UUID) error
@@ -64,6 +65,17 @@ Read -> read user from database by his UUID
 func (service UserService) Read(uuid uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := service.db.Where(&models.User{UUID: uuid}).First(&user).Error; err != nil {
+		return nil, UserNotFoundError{err}
+	}
+	return &user, nil
+}
+
+/*
+ReadByEmail -> read user from database by his email
+*/
+func (service UserService) ReadByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := service.db.Where(&models.User{Email: email}).First(&user).Error; err != nil {
 		return nil, UserNotFoundError{err}
 	}
 	return &user, nil
