@@ -41,6 +41,14 @@ func RegisterUserRoutes(
 
 		verifyRoutes.PATCH("/verify", controller.VerificateUser)
 	}
+
+	readRoutes := router.Group("/users")
+	{
+		scopes := []string{services.ScopeUserRead}
+		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+
+		readRoutes.GET("/me", controller.Me)
+	}
 }
 
 /*
@@ -123,4 +131,12 @@ VerificateUser -> verificates the user who perform the request
 func (controller UserController) VerificateUser(c *gin.Context) {
 	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
 	c.JSON(http.StatusOK, nil)
+}
+
+/*
+Me -> return the user data who perform the request
+*/
+func (controller UserController) Me(c *gin.Context) {
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
 }

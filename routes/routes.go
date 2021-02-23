@@ -24,6 +24,7 @@ func Routes(router *gin.Engine) {
 	authBearerMiddleware := middlewares.NewAuthBearerMiddleware(authService)
 
 	// Routes
+	controllers.RegisterAuthRoutes(router, authService)
 	controllers.RegisterPingRoutes(router)
 	controllers.RegisterUserRoutes(
 		router, authBearerMiddleware,
