@@ -31,12 +31,17 @@ type updateRecorder struct {
 	userData validators.UserUpdateData
 }
 
+type verificateRecorder struct {
+	called bool
+}
+
 type mockUserService struct {
 	createRecorder     *createRecorder
 	readRecorder       *uuidRecorder
 	updateRecorder     *updateRecorder
 	deleteRecorder     *uuidRecorder
 	softdeleteRecorder *uuidRecorder
+	verificateRecorder *verificateRecorder
 
 	createError     error
 	readError       error
@@ -70,6 +75,10 @@ func (service *mockUserService) SoftDelete(uuid uuid.UUID) error {
 	return service.softdeleteError
 }
 
+func (service *mockUserService) Verificate(*models.User) {
+	*service.verificateRecorder = verificateRecorder{called: true}
+}
+
 func newMockedService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
 	return mockUserService{
 		createRecorder:     new(createRecorder),
@@ -77,6 +86,7 @@ func newMockedService(createError error, readError error, updateError error, del
 		updateRecorder:     new(updateRecorder),
 		deleteRecorder:     new(uuidRecorder),
 		softdeleteRecorder: new(uuidRecorder),
+		verificateRecorder: new(verificateRecorder),
 		createError:        createError,
 		readError:          readError,
 		updateError:        updateError,
@@ -89,32 +99,23 @@ type mockAuthBearerMiddleware struct {
 	hasScopesCalled         bool
 	requestedScopes         *[]string
 	getAuthorizedUserCalled bool
+
+	authorizedUser *models.User
 }
 
-func newMockAuthBearerMiddleware() *mockAuthBearerMiddleware {
-	return &mockAuthBearerMiddleware{false, new([]string), false}
+func newMockAuthBearerMiddleware(authorizedUser *models.User) *mockAuthBearerMiddleware {
+	return &mockAuthBearerMiddleware{false, new([]string), false, authorizedUser}
 }
 
 func (middleware *mockAuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
 	middleware.hasScopesCalled = true
 	middleware.requestedScopes = &scopes
-	user := models.NewUser(
-		"test@test.com",
-		"testestestestest",
-		"test",
-		"test",
-		time.Now(),
-		"+34666666666",
-	)
-
-	return func(c *gin.Context) {
-		c.Set("authorizedUser", user)
-	}
+	return func(c *gin.Context) {}
 }
 
 func (middleware *mockAuthBearerMiddleware) GetAuthorizedUser(c *gin.Context) *models.User {
 	middleware.getAuthorizedUserCalled = true
-	return c.MustGet("authorizedUser").(*models.User)
+	return middleware.authorizedUser
 }
 
 func setupUserRouter(authBearerMiddleware middlewares.IAuthBearerMiddleware, userService services.IUserService) *gin.Engine {
@@ -128,7 +129,7 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("Test create user successfully", func(t *testing.T) {
 		userService := newMockedService(nil, nil, nil, nil, nil)
-		authBearerMiddleware := newMockAuthBearerMiddleware()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
 		router := setupUserRouter(authBearerMiddleware, &userService)
 		var response gin.H
 
@@ -163,7 +164,7 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("Test create user binding error", func(t *testing.T) {
 		userService := newMockedService(nil, nil, nil, nil, nil)
-		router := setupUserRouter(newMockAuthBearerMiddleware(), &userService)
+		router := setupUserRouter(newMockAuthBearerMiddleware(nil), &userService)
 		var response gin.H
 
 		payload, _ := json.Marshal(map[string]string{
@@ -181,7 +182,7 @@ func TestCreateUser(t *testing.T) {
 	t.Run("Test create user service error", func(t *testing.T) {
 		expectedError := errors.New("create error")
 		userService := newMockedService(expectedError, nil, nil, nil, nil)
-		router := setupUserRouter(newMockAuthBearerMiddleware(), &userService)
+		router := setupUserRouter(newMockAuthBearerMiddleware(nil), &userService)
 		var response gin.H
 
 		email := "test@test.com"
@@ -204,5 +205,34 @@ func TestCreateUser(t *testing.T) {
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
 		assert.Equal(response["error"], expectedError.Error())
+	})
+}
+
+func TestVerificateUser(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test verificate user successfully", func(t *testing.T) {
+		authorizedUser := models.NewUser(
+			"test@test.com",
+			"testestestestest",
+			"test",
+			"test",
+			time.Now(),
+			"+34666666666",
+		)
+		expectedScopes := []string{services.ScopeUserVerify}
+		userService := newMockedService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(authMiddleware, &userService)
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/verify", bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+
+		assert.True(authMiddleware.hasScopesCalled)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
+		assert.True(userService.verificateRecorder.called)
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(authMiddleware.requestedScopes, expectedScopes)
 	})
 }

@@ -12,11 +12,16 @@ import (
 IUserService -> interface for user service
 */
 type IUserService interface {
+
+	// CRUD operations
 	Create(userData validators.UserCreateData) (*models.User, error)
 	Read(uuid uuid.UUID) (*models.User, error)
 	Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error)
 	Delete(uuid uuid.UUID) error
 	SoftDelete(uuid uuid.UUID) error
+
+	// User methods
+	Verificate(*models.User)
 }
 
 /*
@@ -106,4 +111,12 @@ func (service UserService) SoftDelete(uuid uuid.UUID) error {
 		return UserNotFoundError{err}
 	}
 	return nil
+}
+
+/*
+Verificate -> verificates the given user
+*/
+func (service UserService) Verificate(user *models.User) {
+	user.Verified = true
+	service.db.Save(user)
 }

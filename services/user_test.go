@@ -205,3 +205,18 @@ func TestUserServiceSoftDelete(t *testing.T) {
 	})
 
 }
+
+func TestUserServiceVerificate(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test verify user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		service := UserService{db}
+		user := userFactory()
+
+		service.Verificate(&user)
+
+		assert.True(user.Verified)
+	})
+
+}
