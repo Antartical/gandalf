@@ -12,11 +12,12 @@ import (
 
 func userFactory() models.User {
 	userData := validators.UserCreateData{
-		Email:    "test@test.com",
-		Password: "testestestestest",
-		Name:     "test",
-		Surname:  "test",
-		Birthday: time.Now(),
+		Email:           "test@test.com",
+		Password:        "testestestestest",
+		Name:            "test",
+		Surname:         "test",
+		Birthday:        time.Now(),
+		VerificationURL: "test",
 	}
 	return models.NewUser(
 		userData.Email,
@@ -45,11 +46,12 @@ func TestUserServiceCreate(t *testing.T) {
 	t.Run("Test user create successfully", func(t *testing.T) {
 		service := UserService{tests.NewTestDatabase(true)}
 		userData := validators.UserCreateData{
-			Email:    "test@test.com",
-			Password: "testestestestest",
-			Name:     "test",
-			Surname:  "test",
-			Birthday: time.Now(),
+			Email:           "test@test.com",
+			Password:        "testestestestest",
+			Name:            "test",
+			Surname:         "test",
+			Birthday:        time.Now(),
+			VerificationURL: "test",
 		}
 
 		user, err := service.Create(userData)
@@ -65,11 +67,12 @@ func TestUserServiceCreate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 		userData := validators.UserCreateData{
-			Email:    "test@test.com",
-			Password: "testestestestest",
-			Name:     "test",
-			Surname:  "test",
-			Birthday: time.Now(),
+			Email:           "test@test.com",
+			Password:        "testestestestest",
+			Name:            "test",
+			Surname:         "test",
+			Birthday:        time.Now(),
+			VerificationURL: "test",
 		}
 
 		user, _ := service.Create(userData)
@@ -103,6 +106,35 @@ func TestUserServiceRead(t *testing.T) {
 		service := UserService{db}
 		user := userFactory()
 		_, err := service.Read(user.UUID)
+
+		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestUserServiceReadByEmail(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test read user by email successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+
+		user := userFactory()
+		db.Create(&user)
+
+		readUser, err := service.ReadByEmail(user.Email)
+
+		assert.NoError(err)
+		assert.Equal(user.ID, readUser.ID)
+
+		db.Unscoped().Delete(&user)
+	})
+
+	t.Run("Test read user by email not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
+		user := userFactory()
+		_, err := service.ReadByEmail(user.Email)
 
 		assert.Error(err, UserNotFoundError{nil}.Error())
 	})
@@ -202,6 +234,21 @@ func TestUserServiceSoftDelete(t *testing.T) {
 
 		err := service.SoftDelete(user.UUID)
 		assert.Error(err, UserNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestUserServiceVerificate(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test verify user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		service := UserService{db}
+		user := userFactory()
+
+		service.Verificate(&user)
+
+		assert.True(user.Verified)
 	})
 
 }
