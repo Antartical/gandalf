@@ -17,6 +17,7 @@ IPelipperService -> pelipper interface
 */
 type IPelipperService interface {
 	SendUserVerifyEmail(data validators.PelipperUserVerifyEmail)
+	SendUserChangePasswordEmail(data validators.PelipperUserChangePassword)
 }
 
 /*
@@ -41,6 +42,13 @@ func NewPelipperService() PelipperService {
 	}
 }
 
+func (service PelipperService) manageResponse(response *http.Response, err error, email string) {
+	if err != nil || response.StatusCode != http.StatusCreated {
+		log.Println(fmt.Sprintf("%s -> %s", err.Error(), service.Host))
+		log.Println(fmt.Sprintf("Verification email cannot be sended to %s", email))
+	}
+}
+
 /*
 SendUserVerifyEmail -> send the verification email
 */
@@ -55,8 +63,22 @@ func (service PelipperService) SendUserVerifyEmail(data validators.PelipperUserV
 	httptest.NewRecorder()
 
 	response, err := service.post(fmt.Sprintf("%s/emails/users/verify", service.Host), "application/json", bytes.NewBuffer(payload))
-	if err != nil || response.StatusCode != http.StatusCreated {
-		log.Println(fmt.Sprintf("%s -> %s", err.Error(), service.Host))
-		log.Println(fmt.Sprintf("Verification email cannot be sended to %s", data.Email))
-	}
+	service.manageResponse(response, err, data.Email)
+}
+
+/*
+SendUserChangePasswordEmail -> send the verification email
+*/
+func (service PelipperService) SendUserChangePasswordEmail(data validators.PelipperUserChangePassword) {
+	payload, _ := json.Marshal(map[string]string{
+		"from":                 service.SMPTAccount,
+		"to":                   data.Email,
+		"name":                 data.Name,
+		"subject":              data.Subject,
+		"change_password_link": data.ChangePasswordLink,
+	})
+	httptest.NewRecorder()
+
+	response, err := service.post(fmt.Sprintf("%s/emails/users/change_password", service.Host), "application/json", bytes.NewBuffer(payload))
+	service.manageResponse(response, err, data.Email)
 }
