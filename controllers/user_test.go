@@ -6,6 +6,7 @@ import (
 	"errors"
 	"gandalf/middlewares"
 	"gandalf/models"
+	"gandalf/security"
 	"gandalf/services"
 	"gandalf/validators"
 	"net/http"
@@ -356,7 +357,7 @@ func TestVerificateUser(t *testing.T) {
 			time.Now(),
 			"+34666666666",
 		)
-		expectedScopes := []string{services.ScopeUserVerify}
+		expectedScopes := []string{security.ScopeUserVerify}
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
@@ -374,5 +375,36 @@ func TestVerificateUser(t *testing.T) {
 		assert.True(userService.verificateRecorder.called)
 		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
 		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
+	})
+}
+
+func TestMe(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test Me", func(t *testing.T) {
+		authorizedUser := models.NewUser(
+			"test@test.com",
+			"testestestestest",
+			"test",
+			"test",
+			time.Now(),
+			"+34666666666",
+		)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("GET", "/users/me", bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
 	})
 }

@@ -1,10 +1,39 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"gandalf/models"
 	"gandalf/services"
 	"gandalf/validators"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
+
+func userFactory() models.User {
+	userData := validators.UserCreateData{
+		Email:           "test@test.com",
+		Password:        "testestestestest",
+		Name:            "test",
+		Surname:         "test",
+		Birthday:        time.Now(),
+		VerificationURL: "test",
+	}
+	return models.NewUser(
+		userData.Email,
+		userData.Password,
+		userData.Name,
+		userData.Surname,
+		userData.Birthday,
+		userData.Phone,
+	)
+}
 
 type authenticateRecorder struct {
 	credentials validators.Credentials
@@ -76,5 +105,139 @@ func (service *mockAuthService) GetAuthorizedUser(accessToken string, scopes []s
 func (service *mockAuthService) RefreshToken(accessToken string, refreshToken string) (*services.AuthTokens, error) {
 	service.refreshTokenRecorder.accessToken = accessToken
 	service.refreshTokenRecorder.refreshToken = refreshToken
-	return &services.AuthTokens{AccessToken: "", RefreshToken: ""}, service.refreshTokenError
+	return &services.AuthTokens{AccessToken: "", RefreshToken: refreshToken}, service.refreshTokenError
+}
+
+func setupAuthRouter(authService services.IAuthService) *gin.Engine {
+	router := gin.Default()
+	RegisterAuthRoutes(router, authService)
+	return router
+}
+
+func TestLogin(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test login successfully", func(t *testing.T) {
+		user := userFactory()
+		scopes := []string{"example:scope"}
+		authService := newMockedAuthService(&user, nil, nil, nil)
+		router := setupAuthRouter(authService)
+		var response gin.H
+
+		payload, _ := json.Marshal(map[string]interface{}{
+			"email":    user.Email,
+			"password": user.Password,
+			"scopes":   scopes,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/login", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(authService.authenticateRecorder.credentials.Email, user.Email)
+		assert.Equal(authService.authenticateRecorder.credentials.Password, user.Password)
+		assert.Equal(authService.generateTokensRecorder.user.Email, user.Email)
+		assert.Equal(authService.generateTokensRecorder.scopes, scopes)
+	})
+
+	t.Run("Test login wrong payload", func(t *testing.T) {
+		user := userFactory()
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		router := setupAuthRouter(authService)
+
+		payload, _ := json.Marshal(map[string]string{
+			"email": user.Email,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/login", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("Test login forbidden user", func(t *testing.T) {
+		raisedError := errors.New("wrong")
+		user := userFactory()
+		scopes := []string{"example:scope"}
+		authService := newMockedAuthService(nil, raisedError, nil, nil)
+		router := setupAuthRouter(authService)
+
+		payload, _ := json.Marshal(map[string]interface{}{
+			"email":    user.Email,
+			"password": user.Password,
+			"scopes":   scopes,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/login", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusForbidden)
+	})
+}
+
+func TestRefresh(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test refresh token succesfully", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		router := setupAuthRouter(authService)
+		accessToken := "testaccess"
+		refreshToken := "testrefresh"
+		var response gin.H
+
+		payload, _ := json.Marshal(map[string]string{
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/refresh", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(authService.refreshTokenRecorder.accessToken, accessToken)
+		assert.Equal(authService.refreshTokenRecorder.refreshToken, refreshToken)
+	})
+
+	t.Run("Test refresh token wrong payload", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		router := setupAuthRouter(authService)
+		accessToken := "testaccess"
+
+		payload, _ := json.Marshal(map[string]string{
+			"access_token": accessToken,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/refresh", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("Test refresh token unrelated tokens", func(t *testing.T) {
+		raisedError := errors.New("wrong")
+		authService := newMockedAuthService(nil, nil, nil, raisedError)
+		router := setupAuthRouter(authService)
+		accessToken := "testaccess"
+		refreshToken := "testrefresh"
+		var response gin.H
+
+		payload, _ := json.Marshal(map[string]string{
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/auth/refresh", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
 }

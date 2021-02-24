@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/security"
 	"gandalf/tests"
 	"gandalf/validators"
 	"os"
@@ -41,7 +42,7 @@ func TestAuthService(t *testing.T) {
 
 		user := userFactory()
 		user.UUID, _ = uuid.NewV4()
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		mockToken := authService.signToken(authService.newTokenWithClaims(
 			jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
 		))
@@ -67,7 +68,7 @@ func TestAuthService(t *testing.T) {
 
 		user := userFactory()
 		user.UUID, _ = uuid.NewV4()
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		mockToken := authService.signToken(authService.newTokenWithClaims(
 			jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, authService.tokenTTL),
 		))
@@ -86,7 +87,7 @@ func TestAuthService(t *testing.T) {
 
 		user := userFactory()
 		user.UUID, _ = uuid.NewV4()
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 
 		assert.NotPanics(func() {
 			authService.signToken(authService.newTokenWithClaims(
@@ -102,7 +103,7 @@ func TestAuthService(t *testing.T) {
 
 		user := userFactory()
 		user.UUID, _ = uuid.NewV4()
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 
 		assert.Panics(func() {
 			authService.signToken(authService.newTokenWithClaims(
@@ -179,7 +180,7 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test GetAuthorizedUser successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead, ScopeUserVerify}
+		scopes := []string{security.ScopeUserRead, security.ScopeUserVerify}
 		user := userFactory()
 		user.Verified = true
 		db.Create(&user)
@@ -200,7 +201,7 @@ func TestAuthService(t *testing.T) {
 		authService.parseTokenWithClaims = func(tokenString string, claims jwt.Claims, keyFunc jwt.Keyfunc) (*jwt.Token, error) {
 			return nil, raisedError
 		}
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		user := userFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
@@ -212,8 +213,8 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test GetAuthorizedUser no scopes error", func(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead}
-		otherScopes := []string{ScopeUserWrite}
+		scopes := []string{security.ScopeUserRead}
+		otherScopes := []string{security.ScopeUserWrite}
 		user := userFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
@@ -225,7 +226,7 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test GetAuthorizedUser no user error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		user := userFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
@@ -237,7 +238,7 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test RefreshToken successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		user := userFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
@@ -259,7 +260,7 @@ func TestAuthService(t *testing.T) {
 	t.Run("Test RefreshToken unrelates tokens", func(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
-		scopes := []string{ScopeUserRead}
+		scopes := []string{security.ScopeUserRead}
 		user := userFactory()
 
 		accessToken := authService.GenerateTokens(user, scopes).AccessToken
