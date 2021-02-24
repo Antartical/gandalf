@@ -27,7 +27,7 @@ type UserCreateData struct {
 UserResetPasswordData -> user data for update
 */
 type UserResetPasswordData struct {
-	Password string `json:"password" binding:"omitempty,min=10"`
+	Password string `json:"password" binding:"min=10,required"`
 }
 
 /*

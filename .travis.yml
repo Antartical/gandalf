@@ -24,8 +24,8 @@ jobs:
         - make ci_check_tests
         - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci
 
-    # - stage: Github Packages Deploy
-    #   if: (NOT type IN (pull_request)) AND (branch = master)
-    #   env: TAG=$(date +%d%m%Y%H%M%S)
-    #   script: make docker_tag_and_push
+    - stage: Github Packages Deploy
+      if: (NOT type IN (pull_request)) AND (branch = master)
+      env: TAG=$(date +%d%m%Y%H%M%S)
+      script: make docker_tag_and_push
 

@@ -33,7 +33,7 @@ func RegisterUserRoutes(
 	{
 		publicRoutes.POST("", controller.CreateUser)
 		publicRoutes.POST("/verify/resend", controller.ResendVerificationEmail)
-		publicRoutes.POST("/reset/resend", controller.ResendVerificationEmail)
+		publicRoutes.POST("/reset/resend", controller.ResendResetPasswordEmail)
 	}
 
 	verifyRoutes := router.Group("/users")

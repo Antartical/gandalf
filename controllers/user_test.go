@@ -96,7 +96,7 @@ func (service *mockUserService) Verificate(*models.User) {
 }
 
 func (service *mockUserService) ResetPassword(user *models.User, password string) {
-
+	*service.resetPasswordRecorder = resetPasswordRecorder{password}
 }
 
 func newMockedUserService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
@@ -426,5 +426,155 @@ func TestMe(t *testing.T) {
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
+	})
+}
+
+func TestUserResendResetPasswordEmail(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test resend change password email successfully", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"email":            email,
+			"verification_url": "test",
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(userService.readByEmailRecorder.email, email)
+		assert.Equal(authService.generateTokensRecorder.user.Email, email)
+		assert.False(authBearerMiddleware.hasScopesCalled)
+		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
+	})
+
+	t.Run("Test resend change password email wrong payload", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"wrong": email,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("Test resend change password email not registered", func(t *testing.T) {
+		authService := newMockedAuthService(nil, nil, nil, nil)
+		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
+		pelipperService := newPelipperServiceMock()
+		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
+		router := setupUserRouter(
+			authBearerMiddleware, authService,
+			&userService, pelipperService,
+		)
+		var response gin.H
+		email := "test@test.com"
+
+		payload, _ := json.Marshal(map[string]string{
+			"email":            email,
+			"verification_url": "test",
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(userService.readByEmailRecorder.email, email)
+		assert.False(authBearerMiddleware.hasScopesCalled)
+		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
+	})
+}
+
+func TestResetUserPassword(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test verificate user successfully", func(t *testing.T) {
+		password := "testestestestest"
+		authorizedUser := models.NewUser(
+			"test@test.com",
+			password,
+			"test",
+			"test",
+			time.Now(),
+			"+34666666666",
+		)
+		payload, _ := json.Marshal(map[string]string{
+			"password": password,
+		})
+		expectedScopes := []string{security.ScopeUserChangePassword}
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+
+		assert.True(authMiddleware.hasScopesCalled)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
+		assert.Equal(userService.resetPasswordRecorder.password, password)
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
+	})
+
+	t.Run("Test verificate user wrong payload", func(t *testing.T) {
+		password := "testestestestest"
+		authorizedUser := models.NewUser(
+			"test@test.com",
+			password,
+			"test",
+			"test",
+			time.Now(),
+			"+34666666666",
+		)
+		payload, _ := json.Marshal(map[string]string{
+			"wrong": password,
+		})
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
 	})
 }
