@@ -33,6 +33,7 @@ func RegisterUserRoutes(
 	{
 		publicRoutes.POST("", controller.CreateUser)
 		publicRoutes.POST("/verify/resend", controller.ResendVerificationEmail)
+		publicRoutes.POST("/reset/resend", controller.ResendVerificationEmail)
 	}
 
 	verifyRoutes := router.Group("/users")
@@ -49,6 +50,14 @@ func RegisterUserRoutes(
 		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
 		readRoutes.GET("/me", controller.Me)
+	}
+
+	changePasswordRoutes := router.Group("/users")
+	{
+		scopes := []string{security.ScopeUserChangePassword}
+		changePasswordRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+
+		changePasswordRoutes.PATCH("/reset", controller.ResetUserPassword)
 	}
 }
 
@@ -131,6 +140,51 @@ VerificateUser -> verificates the user who perform the request
 */
 func (controller UserController) VerificateUser(c *gin.Context) {
 	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
+	c.JSON(http.StatusOK, nil)
+}
+
+/*
+ResendResetPasswordEmail -> resend the user reset password email to the given
+one
+*/
+func (controller UserController) ResendResetPasswordEmail(c *gin.Context) {
+	var input validators.UserResendEmail
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := controller.userService.ReadByEmail(input.Email)
+	if err != nil {
+		c.JSON(http.StatusCreated, nil)
+		return
+	}
+
+	changePasswordToken := controller.authService.GenerateTokens(
+		*user, []string{security.ScopeUserChangePassword},
+	).AccessToken
+	emailData := validators.PelipperUserChangePassword{
+		Email:   user.Email,
+		Name:    user.Name,
+		Subject: "Welcome",
+		ChangePasswordLink: fmt.Sprintf(
+			"%s?code=%s", input.VerificationURL, changePasswordToken,
+		),
+	}
+	go controller.pelipperService.SendUserChangePasswordEmail(emailData)
+	c.JSON(http.StatusCreated, nil)
+}
+
+/*
+ResetUserPassword -> reset the password ftom the user who perform the request
+*/
+func (controller UserController) ResetUserPassword(c *gin.Context) {
+	var input validators.UserResetPasswordData
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)
 	c.JSON(http.StatusOK, nil)
 }
 

@@ -24,6 +24,13 @@ type UserCreateData struct {
 }
 
 /*
+UserResetPasswordData -> user data for update
+*/
+type UserResetPasswordData struct {
+	Password string `json:"password" binding:"omitempty,min=10"`
+}
+
+/*
 UserUpdateData -> user data for update
 */
 type UserUpdateData struct {

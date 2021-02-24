@@ -40,14 +40,19 @@ type verificateRecorder struct {
 	called bool
 }
 
+type resetPasswordRecorder struct {
+	password string
+}
+
 type mockUserService struct {
-	createRecorder      *createRecorder
-	readRecorder        *uuidRecorder
-	readByEmailRecorder *emailRecorder
-	updateRecorder      *updateRecorder
-	deleteRecorder      *uuidRecorder
-	softdeleteRecorder  *uuidRecorder
-	verificateRecorder  *verificateRecorder
+	createRecorder        *createRecorder
+	readRecorder          *uuidRecorder
+	readByEmailRecorder   *emailRecorder
+	updateRecorder        *updateRecorder
+	deleteRecorder        *uuidRecorder
+	softdeleteRecorder    *uuidRecorder
+	verificateRecorder    *verificateRecorder
+	resetPasswordRecorder *resetPasswordRecorder
 
 	createError     error
 	readError       error
@@ -90,20 +95,25 @@ func (service *mockUserService) Verificate(*models.User) {
 	*service.verificateRecorder = verificateRecorder{called: true}
 }
 
+func (service *mockUserService) ResetPassword(user *models.User, password string) {
+
+}
+
 func newMockedUserService(createError error, readError error, updateError error, deleteError error, softdeleteError error) mockUserService {
 	return mockUserService{
-		createRecorder:      new(createRecorder),
-		readByEmailRecorder: new(emailRecorder),
-		readRecorder:        new(uuidRecorder),
-		updateRecorder:      new(updateRecorder),
-		deleteRecorder:      new(uuidRecorder),
-		softdeleteRecorder:  new(uuidRecorder),
-		verificateRecorder:  new(verificateRecorder),
-		createError:         createError,
-		readError:           readError,
-		updateError:         updateError,
-		deleteError:         deleteError,
-		softdeleteError:     softdeleteError,
+		createRecorder:        new(createRecorder),
+		readByEmailRecorder:   new(emailRecorder),
+		readRecorder:          new(uuidRecorder),
+		updateRecorder:        new(updateRecorder),
+		deleteRecorder:        new(uuidRecorder),
+		softdeleteRecorder:    new(uuidRecorder),
+		verificateRecorder:    new(verificateRecorder),
+		resetPasswordRecorder: new(resetPasswordRecorder),
+		createError:           createError,
+		readError:             readError,
+		updateError:           updateError,
+		deleteError:           deleteError,
+		softdeleteError:       softdeleteError,
 	}
 }
 
@@ -148,18 +158,28 @@ func setupUserRouter(
 type sendUserVerifyEmailRecorder struct {
 	data validators.PelipperUserVerifyEmail
 }
+
+type sendUserChangePasswordEmailRecorder struct {
+	data validators.PelipperUserChangePassword
+}
 type pelipperServiceMock struct {
-	sendUserVerifyEmailRecorder *sendUserVerifyEmailRecorder
+	sendUserVerifyEmailRecorder         *sendUserVerifyEmailRecorder
+	sendUserChangePasswordEmailRecorder *sendUserChangePasswordEmailRecorder
 }
 
 func newPelipperServiceMock() *pelipperServiceMock {
 	return &pelipperServiceMock{
-		sendUserVerifyEmailRecorder: new(sendUserVerifyEmailRecorder),
+		sendUserVerifyEmailRecorder:         new(sendUserVerifyEmailRecorder),
+		sendUserChangePasswordEmailRecorder: new(sendUserChangePasswordEmailRecorder),
 	}
 }
 
 func (service *pelipperServiceMock) SendUserVerifyEmail(data validators.PelipperUserVerifyEmail) {
 	service.sendUserVerifyEmailRecorder.data = data
+}
+
+func (service *pelipperServiceMock) SendUserChangePasswordEmail(data validators.PelipperUserChangePassword) {
+	service.sendUserChangePasswordEmailRecorder.data = data
 }
 
 func TestCreateUser(t *testing.T) {

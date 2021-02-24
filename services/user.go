@@ -23,6 +23,7 @@ type IUserService interface {
 
 	// User methods
 	Verificate(*models.User)
+	ResetPassword(user *models.User, password string)
 }
 
 /*
@@ -130,5 +131,13 @@ Verificate -> verificates the given user
 */
 func (service UserService) Verificate(user *models.User) {
 	user.Verified = true
+	service.db.Save(user)
+}
+
+/*
+ResetPassword -> reset the user password to the given one
+*/
+func (service UserService) ResetPassword(user *models.User, password string) {
+	user.SetPassword(password)
 	service.db.Save(user)
 }

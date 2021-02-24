@@ -60,6 +60,19 @@ func TestPelipperService(t *testing.T) {
 		assert.Equal(pelipperService.SMPTAccount, os.Getenv("PELIPPER_SMTP_ACCOUNT"))
 	})
 
+	t.Run("Test manageResponse", func(t *testing.T) {
+		raisedError := errors.New("wrong")
+		email := "test@test.com"
+		mockPost := newMockPost(http.StatusCreated, nil)
+		pelipperService := PelipperService{
+			Host:        "",
+			SMPTAccount: "",
+			post:        mockPost.post,
+		}
+
+		pelipperService.manageResponse(nil, raisedError, email)
+	})
+
 	t.Run("Test SendUserVerifyEmail successfully", func(t *testing.T) {
 		host := "miscohost"
 		expectedURL := fmt.Sprintf("%s/emails/users/verify", host)
@@ -84,22 +97,28 @@ func TestPelipperService(t *testing.T) {
 		assert.Equal(mockPost.postRecorder.contentType, "application/json")
 	})
 
-	t.Run("Test SendUserVerifyEmail error", func(t *testing.T) {
-		raisedError := errors.New("wrong")
-		mockPost := newMockPost(http.StatusCreated, raisedError)
+	t.Run("Test SendUserChangePasswordEmail successfully", func(t *testing.T) {
+		host := "miscohost"
+		expectedURL := fmt.Sprintf("%s/emails/users/change_password", host)
+		smtpAccount := "miscoAccount"
+		email := "test@test.com"
+		mockPost := newMockPost(http.StatusCreated, nil)
 		pelipperService := PelipperService{
-			Host:        "",
-			SMPTAccount: "",
+			Host:        host,
+			SMPTAccount: smtpAccount,
 			post:        mockPost.post,
 		}
 
-		emailData := validators.PelipperUserVerifyEmail{
-			Email:            "",
-			Name:             "",
-			Subject:          "",
-			VerificationLink: "",
+		emailData := validators.PelipperUserChangePassword{
+			Email:              email,
+			Name:               "",
+			Subject:            "",
+			ChangePasswordLink: "",
 		}
 
-		pelipperService.SendUserVerifyEmail(emailData)
+		pelipperService.SendUserChangePasswordEmail(emailData)
+		assert.Equal(mockPost.postRecorder.url, expectedURL)
+		assert.Equal(mockPost.postRecorder.contentType, "application/json")
 	})
+
 }

@@ -252,3 +252,19 @@ func TestUserServiceVerificate(t *testing.T) {
 	})
 
 }
+
+func TestUserServiceResetPassword(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test verify user successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(true)
+		newPassword := "wowowowowowoow"
+		service := UserService{db}
+		user := userFactory()
+
+		service.ResetPassword(&user, newPassword)
+
+		assert.True(user.VerifyPassword(newPassword))
+	})
+
+}
