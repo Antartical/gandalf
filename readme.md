@@ -45,3 +45,60 @@ Install pre-commit is easy:
 pip install pre-commit
 python3 -m pre_commit install
 ```
+
+## How to setup Pelipper as a dependency in your own docker-compose
+
+Just include the following code in your `docker-compose.yml`
+
+```docker
+mailhog:
+  image: mailhog/mailhog
+  container_name: mailhog
+  ports: 
+    - 1025:1025
+    - 8025:8025
+
+pelipper:
+  image: ghcr.io/antartical/pelipper
+  container_name: pelipper
+  ports:
+    - "9000:9000"
+  environment:
+    - SMTP_HOST=mailhog
+    - SMTP_PORT=1025
+    - SMTP_USER=admin
+    - SMTP_PASSWORD=admin
+
+postgres:
+  image: postgres:13.1-alpine
+  container_name: postgres
+  restart: always
+  environment:
+    - POSTGRES_USER=root
+    - POSTGRES_PASSWORD=root
+    - POSTGRES_DB=frodo
+    - POSTGRES_EXTENSIONS=uuid-ossp
+  ports:
+    - "5432:5432"
+  volumes:
+    - antartical.frodo:/var/lib/postgresql/data
+
+gandalf:
+  image: ghcr.io/antartical/gandalf
+  container_name: gandalf
+  ports:
+    - "9100:9100"
+  environment:
+  - ENVIRONMENT=docker
+  - JWT_TOKEN_TTL=60
+  - JWT_TOKEN_RTTL=1440
+  - JWT_TOKEN_KEY=mysupersecret
+  - PELIPPER_HOST=http://pelipper:9000
+  - PELIPPER_SMTP_ACCOUNT=accounts@antartical.com
+  - POSTGRES_USER=root
+  - POSTGRES_PASSWORD=root
+  - POSTGRES_DB=frodo
+  - POSTGRES_DB_TEST=test
+  - POSTGRES_HOST=postgres
+  - POSTGRES_PORT=5432
+```
