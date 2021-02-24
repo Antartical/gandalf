@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"gandalf/middlewares"
+	"gandalf/security"
 	"gandalf/serializers"
 	"gandalf/services"
 	"gandalf/validators"
@@ -36,10 +37,18 @@ func RegisterUserRoutes(
 
 	verifyRoutes := router.Group("/users")
 	{
-		scopes := []string{services.ScopeUserVerify}
+		scopes := []string{security.ScopeUserVerify}
 		verifyRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
 		verifyRoutes.PATCH("/verify", controller.VerificateUser)
+	}
+
+	readRoutes := router.Group("/users")
+	{
+		scopes := []string{security.ScopeUserRead}
+		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+
+		readRoutes.GET("/me", controller.Me)
 	}
 }
 
@@ -70,7 +79,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	}
 
 	verifyToken := controller.authService.GenerateTokens(
-		*user, []string{services.ScopeUserVerify},
+		*user, []string{security.ScopeUserVerify},
 	).AccessToken
 	emailData := validators.PelipperUserVerifyEmail{
 		Email:   user.Email,
@@ -103,7 +112,7 @@ func (controller UserController) ResendVerificationEmail(c *gin.Context) {
 	}
 
 	verifyToken := controller.authService.GenerateTokens(
-		*user, []string{services.ScopeUserVerify},
+		*user, []string{security.ScopeUserVerify},
 	).AccessToken
 	emailData := validators.PelipperUserVerifyEmail{
 		Email:   user.Email,
@@ -123,4 +132,12 @@ VerificateUser -> verificates the user who perform the request
 func (controller UserController) VerificateUser(c *gin.Context) {
 	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
 	c.JSON(http.StatusOK, nil)
+}
+
+/*
+Me -> return the user data who perform the request
+*/
+func (controller UserController) Me(c *gin.Context) {
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
 }

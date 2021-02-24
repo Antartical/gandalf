@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"gandalf/models"
+	"gandalf/security"
 	"gandalf/validators"
 	"os"
 	"strconv"
@@ -12,17 +13,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
-)
-
-/*
-Auth scopes
-*/
-const (
-	ScopeUserRead           = "user:read"
-	ScopeUserVerify         = "user:verify"
-	ScopeUserChangePassword = "user:change-password"
-	ScopeUserWrite          = "user:write"
-	ScopeUserDelete         = "user:delete"
 )
 
 /*
@@ -206,7 +196,7 @@ func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*mo
 
 	// It's mandatory to search on verified users, except on the verification
 	// endpoint
-	if mandatoryScopes.Contains(ScopeUserVerify) {
+	if mandatoryScopes.Contains(security.ScopeUserVerify) {
 		verified = false
 	}
 

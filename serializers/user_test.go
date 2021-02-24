@@ -21,10 +21,10 @@ func TestUserSerializer(t *testing.T) {
 		user := models.NewUser(email, "test", name, surname, birthday, phone)
 		userSerializer := NewUserSerializer(user)
 
-		assert.Equal(userSerializer.Name, name)
-		assert.Equal(userSerializer.Email, email)
-		assert.Equal(userSerializer.Surname, surname)
-		assert.Equal(userSerializer.Birthday, birthday)
-		assert.Equal(userSerializer.Phone, phone)
+		assert.Equal(userSerializer.Data.Name, name)
+		assert.Equal(userSerializer.Data.Email, email)
+		assert.Equal(userSerializer.Data.Surname, surname)
+		assert.Equal(userSerializer.Data.Birthday, birthday)
+		assert.Equal(userSerializer.Data.Phone, phone)
 	})
 }
