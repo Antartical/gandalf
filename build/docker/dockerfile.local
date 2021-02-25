@@ -4,8 +4,10 @@ ARG GO_VERSION=1.14.4
 FROM golang:${GO_VERSION}-alpine
 ENV GANDALF_PORT=9100
 
-RUN apk update && apk add alpine-sdk git bash && rm -rf /var/cache/apk/*
+RUN apk update && apk add alpine-sdk git bash netcat-openbsd && rm -rf /var/cache/apk/*
 COPY ./build/config/.bashrc /root/.bashrc
+COPY ./build/config/start.sh /bin/start.sh
+RUN chmod 777 /bin/start.sh
 
 RUN mkdir -p /api
 WORKDIR /api
@@ -19,4 +21,5 @@ COPY ./ ./
 
 EXPOSE 9100
 
+ENTRYPOINT ["start.sh"]
 CMD ["gin", "--appPort 9100", "--all", "-i run main.go"]
