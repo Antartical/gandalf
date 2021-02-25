@@ -62,7 +62,6 @@ services:
       context: .
       dockerfile: build/docker/dockerfile.local
     container_name: gandalf
-    restart: always
     command: "gin --appPort 9000 --all -i run main.go"
     volumes:
       - ./:/api/

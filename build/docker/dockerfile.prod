@@ -19,15 +19,17 @@ RUN go build -o ./app main.go
 FROM alpine:latest
 ENV GIN_MODE=release
 ENV GANDALF_PORT=9100
-RUN apk update && apk add ca-certificates bash && rm -rf /var/cache/apk/*
+RUN apk update && apk add ca-certificates bash netcat-openbsd && rm -rf /var/cache/apk/*
 COPY ./build/config/.bashrc /root/.bashrc
+COPY ./build/config/start.sh /bin/start.sh
+RUN chmod 777 /bin/start.sh
 
 RUN mkdir -p /api
 WORKDIR /api
-COPY --from=builder /api/app .
+COPY --from=builder /api/app /bin/
 COPY --from=builder /go/bin/goose /bin/goose
 COPY ./migrations ./migrations
 
 EXPOSE 9100
 
-ENTRYPOINT ["./app"]
+ENTRYPOINT ["start.sh", "app"]
