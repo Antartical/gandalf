@@ -37,6 +37,7 @@ run_scripts(){
 system_setup(){
     health_check
     migrate
+    run_scripts
 }
 
 
