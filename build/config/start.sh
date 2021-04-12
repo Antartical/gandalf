@@ -20,9 +20,24 @@ health_check(){
     check_service "$POSTGRES_HOST" "$POSTGRES_PORT" "$MAX_POSTGRES_RETRIES"
 }
 
+migrate(){
+    if ! [[ "$ENVIRONMENT" == "production" ]]; then
+        goose -dir /api/migrations postgres "user=$POSTGRES_USER password=$POSTGRES_PASSWORD dbname=$POSTGRES_DB host=$POSTGRES_HOST port=$POSTGRES_PORT sslmode=disable" up;
+    fi
+}
+
+run_scripts(){
+    if ! [[ "$ENVIRONMENT" == "production" ]]; then
+        for f in /docker-entrypoint-initdb.d/*.sh; do
+            bash "$f" || break
+        done
+    fi
+}
+
 system_setup(){
     health_check
-    goose -dir /api/migrations postgres "user=$POSTGRES_USER password=$POSTGRES_PASSWORD dbname=$POSTGRES_DB host=$POSTGRES_HOST port=$POSTGRES_PORT sslmode=disable" up
+    migrate
+    run_scripts
 }
 
 

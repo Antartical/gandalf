@@ -1,4 +1,4 @@
-  
+
 ARG GO_VERSION=1.14.4
 
 FROM golang:${GO_VERSION}-alpine
@@ -9,6 +9,7 @@ COPY ./build/config/.bashrc /root/.bashrc
 COPY ./build/config/start.sh /bin/start.sh
 RUN chmod 777 /bin/start.sh
 
+RUN mkdir -p /docker-entrypoint-initdb.d
 RUN mkdir -p /api
 WORKDIR /api
 
@@ -18,6 +19,7 @@ RUN go mod download
 RUN go get github.com/codegangsta/gin
 RUN go get -u github.com/pressly/goose/cmd/goose
 COPY ./ ./
+RUN go build -o /bin/gandalf-cli ./cli/main.go
 
 EXPOSE 9100
 
