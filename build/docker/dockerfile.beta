@@ -1,4 +1,4 @@
-  
+
 ARG GO_VERSION=1.14.4
 
 FROM golang:${GO_VERSION}-alpine AS builder
@@ -15,6 +15,7 @@ RUN go mod download
 
 COPY ./ ./
 RUN go build -o ./app main.go
+RUN go build -o ./gandalf-cli ./cli/main.go
 
 FROM alpine:latest
 ENV GIN_MODE=debug
@@ -24,9 +25,11 @@ COPY ./build/config/.bashrc /root/.bashrc
 COPY ./build/config/start.sh /bin/start.sh
 RUN chmod 777 /bin/start.sh
 
+RUN mkdir -p /docker-entrypoint-initdb.d
 RUN mkdir -p /api
 WORKDIR /api
 COPY --from=builder /api/app /bin/
+COPY --from=builder /api/gandalf-cli /bin/
 COPY --from=builder /go/bin/goose /bin/goose
 COPY ./migrations ./migrations
 
