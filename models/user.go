@@ -30,6 +30,9 @@ type User struct {
 
 	// Untracked fields
 	hasher security.Hasher `gorm:"-"`
+
+	// Relation fields
+	apps []App `gorm:"foreignKey:UserRefer"`
 }
 
 /*

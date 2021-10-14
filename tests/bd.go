@@ -23,6 +23,7 @@ func NewTestDatabase(dryRun bool) *gorm.DB {
 
 	db := connection.Connect()
 	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.App{})
 
 	return db.Session(&gorm.Session{DryRun: dryRun})
 }

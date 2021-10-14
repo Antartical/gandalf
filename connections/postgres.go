@@ -17,7 +17,7 @@ type GormPostgresConnection struct {
 	User     string
 	Password string
 	Name     string
-	OpenDb   func(gorm.Dialector, *gorm.Config) (*gorm.DB, error)
+	OpenDb   func(gorm.Dialector, ...gorm.Option) (*gorm.DB, error)
 }
 
 /*
