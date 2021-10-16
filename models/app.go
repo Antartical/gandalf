@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const clientSecretLengt = 32
+const clientSecretLenght = 32
 
 /*
 App -> the app itself
@@ -19,9 +19,9 @@ type App struct {
 	// Mandatory fields
 	UUID uuid.UUID `gorm:"index:app_uuid;unique;type:uuid;default:uuid_generate_v4()"`
 
-	ClientID     string `gorm:"index:app_uuid;unique;type:text:default:uuid_generate_v4()"`
-	ClientSecret string `gorm:"index:usr_uuid;type:text"`
-	Name         string `gorm:"not null"`
+	ClientID     uuid.UUID `gorm:"index:app_client_id;unique;type:uuid;default:uuid_generate_v4()"`
+	ClientSecret string    `gorm:"not null"`
+	Name         string    `gorm:"not null"`
 
 	// Optional fields
 	IconUri      string
@@ -30,25 +30,38 @@ type App struct {
 	// User
 	User   User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	UserID uint
+
+	// Users that have been sign on the app
+	ConnectedUsers []User `gorm:"many2many:user_has_signin_on_app;"`
+
+	// Untracked fields
+	secretGenerator security.ISecretGenerator `gorm:"-"`
+}
+
+/*
+GenerateClientSecret -> generates the client's secret for the
+oauth2 connection
+*/
+func (app *App) generateClientSecret() {
+	secret, err := app.secretGenerator.GenerateSecret(clientSecretLenght)
+	if err != nil {
+		panic(err)
+	}
+	app.ClientSecret = secret
 }
 
 /*
 NewApp -> creates a new app
 */
-func NewApp(name string, iconUri string, redirectUris []string, user User, secretGenerator security.ISecretGenerator) (*App, error) {
-	secret, err := secretGenerator.GenerateSecret(clientSecretLengt)
-	if err != nil {
-		return nil, err
-	}
-
+func NewApp(name string, iconUri string, redirectUris []string, user User) App {
 	app := App{
-		ClientSecret: secret,
-		Name:         name,
-		IconUri:      iconUri,
-		RedirectUris: redirectUris,
-		User:         user,
-		UserID:       user.ID,
+		Name:            name,
+		IconUri:         iconUri,
+		RedirectUris:    redirectUris,
+		User:            user,
+		UserID:          user.ID,
+		secretGenerator: security.NewUniformSecret(),
 	}
-
-	return &app, nil
+	app.generateClientSecret()
+	return app
 }

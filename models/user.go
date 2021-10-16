@@ -32,7 +32,8 @@ type User struct {
 	hasher security.Hasher `gorm:"-"`
 
 	// Relation fields
-	apps []App `gorm:"foreignKey:UserRefer"`
+	Apps          []App `gorm:"foreignKey:UserID"`
+	ConnectedApps []App `gorm:"many2many:user_has_signin_on_app;"`
 }
 
 /*

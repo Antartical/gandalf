@@ -26,6 +26,15 @@ func mockedGetRandomPosition(err error) (func(rand io.Reader, max *big.Int) (n *
 func TestGenerateSecret(t *testing.T) {
 	assert := require.New(t)
 
+	t.Run("Test uniform secret constructor", func(t *testing.T) {
+		lenght := 5
+		uniformGenerator := NewUniformSecret()
+		secret, err := uniformGenerator.GenerateSecret(lenght)
+
+		assert.Equal(lenght, len(secret))
+		assert.Nil(err)
+	})
+
 	t.Run("Test generate secret correct", func(t *testing.T) {
 		getRandomPosition, recorder := mockedGetRandomPosition(nil)
 		secretGenerator := UniformSecretGenerator{

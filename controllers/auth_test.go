@@ -10,30 +10,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
-
-func userFactory() models.User {
-	userData := validators.UserCreateData{
-		Email:           "test@test.com",
-		Password:        "testestestestest",
-		Name:            "test",
-		Surname:         "test",
-		Birthday:        time.Now(),
-		VerificationURL: "test",
-	}
-	return models.NewUser(
-		userData.Email,
-		userData.Password,
-		userData.Name,
-		userData.Surname,
-		userData.Birthday,
-		userData.Phone,
-	)
-}
 
 type authenticateRecorder struct {
 	credentials validators.Credentials
@@ -118,7 +98,7 @@ func TestLogin(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test login successfully", func(t *testing.T) {
-		user := userFactory()
+		user := models.UserFactory()
 		scopes := []string{"example:scope"}
 		authService := newMockedAuthService(&user, nil, nil, nil)
 		router := setupAuthRouter(authService)
@@ -143,7 +123,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("Test login wrong payload", func(t *testing.T) {
-		user := userFactory()
+		user := models.UserFactory()
 		authService := newMockedAuthService(nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 
@@ -160,7 +140,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login forbidden user", func(t *testing.T) {
 		raisedError := errors.New("wrong")
-		user := userFactory()
+		user := models.UserFactory()
 		scopes := []string{"example:scope"}
 		authService := newMockedAuthService(nil, raisedError, nil, nil)
 		router := setupAuthRouter(authService)

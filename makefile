@@ -23,7 +23,7 @@ local.test: local.reset.test_db
 	@echo "\n============================"
 	@echo "=     launching tests      ="
 	@echo "============================"
-	@docker exec gandalf go test ./... -cover
+	@docker exec gandalf go test ./... -cover -count=1
 
 local.coverage.generate_report: local.reset.test_db
 	@echo "\n============================"
