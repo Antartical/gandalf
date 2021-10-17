@@ -10,8 +10,8 @@ CREATE TABLE "public"."apps" (
     "client_id" uuid DEFAULT uuid_generate_v4(),
     "client_secret" text NOT NULL,
     "name" text NOT NULL,
-    "icon_uri" text,
-    "redirect_uris" text[],
+    "icon_url" text,
+    "redirect_urls" text[],
     "user_id" bigint,
     CONSTRAINT "apps_client_id_key" UNIQUE ("client_id"),
     CONSTRAINT "apps_pkey" PRIMARY KEY ("id"),
@@ -62,9 +62,9 @@ ALTER TABLE ONLY "public"."user_has_signin_on_app" ADD CONSTRAINT "fk_user_has_s
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE IF EXISTS "user_has_signin_on_app";
 DROP TABLE IF EXISTS "apps";
 DROP SEQUENCE IF EXISTS apps_id_seq;
-DROP TABLE IF EXISTS "user_has_signin_on_app";
 DROP TABLE IF EXISTS "users";
 DROP SEQUENCE IF EXISTS users_id_seq;
 -- +goose StatementEnd

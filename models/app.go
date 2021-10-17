@@ -24,8 +24,8 @@ type App struct {
 	Name         string    `gorm:"not null"`
 
 	// Optional fields
-	IconUri      string
-	RedirectUris pq.StringArray `gorm:"type:text[]"`
+	IconUrl      string
+	RedirectUrls pq.StringArray `gorm:"type:text[]"`
 
 	// User
 	User   User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
@@ -53,11 +53,11 @@ func (app *App) generateClientSecret() {
 /*
 NewApp -> creates a new app
 */
-func NewApp(name string, iconUri string, redirectUris []string, user User) App {
+func NewApp(name string, IconUrl string, RedirectUrls []string, user User) App {
 	app := App{
 		Name:            name,
-		IconUri:         iconUri,
-		RedirectUris:    redirectUris,
+		IconUrl:         IconUrl,
+		RedirectUrls:    RedirectUrls,
 		User:            user,
 		UserID:          user.ID,
 		secretGenerator: security.NewUniformSecret(),

@@ -207,7 +207,7 @@ func TestCreateUser(t *testing.T) {
 			"name":             name,
 			"Surname":          surname,
 			"Birthday":         birthdayStr,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -267,7 +267,7 @@ func TestCreateUser(t *testing.T) {
 			"name":             name,
 			"Surname":          surname,
 			"Birthday":         birthdayStr,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -297,7 +297,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 
 		payload, _ := json.Marshal(map[string]string{
 			"email":            email,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -350,7 +350,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 
 		payload, _ := json.Marshal(map[string]string{
 			"email":            email,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -446,7 +446,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 
 		payload, _ := json.Marshal(map[string]string{
 			"email":            email,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -499,7 +499,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 
 		payload, _ := json.Marshal(map[string]string{
 			"email":            email,
-			"verification_url": "test",
+			"verification_url": "http://test.com",
 		})
 
 		recorder := httptest.NewRecorder()

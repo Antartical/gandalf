@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/models"
 	"gandalf/security"
 	"gandalf/tests"
 	"gandalf/validators"
@@ -40,7 +41,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
 
-		user := userFactory()
+		user := models.UserFactory()
 		user.UUID, _ = uuid.NewV4()
 		scopes := []string{security.ScopeUserRead}
 		mockToken := authService.signToken(authService.newTokenWithClaims(
@@ -66,7 +67,7 @@ func TestAuthService(t *testing.T) {
 			return nil, raisedError
 		}
 
-		user := userFactory()
+		user := models.UserFactory()
 		user.UUID, _ = uuid.NewV4()
 		scopes := []string{security.ScopeUserRead}
 		mockToken := authService.signToken(authService.newTokenWithClaims(
@@ -85,7 +86,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
 
-		user := userFactory()
+		user := models.UserFactory()
 		user.UUID, _ = uuid.NewV4()
 		scopes := []string{security.ScopeUserRead}
 
@@ -101,7 +102,7 @@ func TestAuthService(t *testing.T) {
 		authService := NewAuthService(db)
 		authService.tokenKey = "string"
 
-		user := userFactory()
+		user := models.UserFactory()
 		user.UUID, _ = uuid.NewV4()
 		scopes := []string{security.ScopeUserRead}
 
@@ -116,7 +117,8 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
 		plainPassword := "testestestestest"
-		user := userFactory()
+		user := models.UserFactory()
+		user.SetPassword(plainPassword)
 		user.Verified = true
 		db.Create(&user)
 
@@ -136,7 +138,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
 		plainPassword := "testestestestest"
-		user := userFactory()
+		user := models.UserFactory()
 
 		credentials := validators.Credentials{
 			Email:    user.Email,
@@ -152,7 +154,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
 		plainInventedPassword := "okkookkookkookkookko"
-		user := userFactory()
+		user := models.UserFactory()
 		user.Verified = true
 		db.Create(&user)
 
@@ -171,7 +173,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
 
-		user := userFactory()
+		user := models.UserFactory()
 		user.UUID, _ = uuid.NewV4()
 
 		assert.NotNil(authService.GenerateTokens(user, []string{}))
@@ -181,7 +183,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
 		scopes := []string{security.ScopeUserRead, security.ScopeUserVerify}
-		user := userFactory()
+		user := models.UserFactory()
 		user.Verified = true
 		db.Create(&user)
 
@@ -202,7 +204,7 @@ func TestAuthService(t *testing.T) {
 			return nil, raisedError
 		}
 		scopes := []string{security.ScopeUserRead}
-		user := userFactory()
+		user := models.UserFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
 		_, err := authService.GetAuthorizedUser(tokens.AccessToken, scopes)
@@ -215,7 +217,7 @@ func TestAuthService(t *testing.T) {
 		authService := NewAuthService(db)
 		scopes := []string{security.ScopeUserRead}
 		otherScopes := []string{security.ScopeUserWrite}
-		user := userFactory()
+		user := models.UserFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
 		_, err := authService.GetAuthorizedUser(tokens.AccessToken, otherScopes)
@@ -227,7 +229,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		authService := NewAuthService(db)
 		scopes := []string{security.ScopeUserRead}
-		user := userFactory()
+		user := models.UserFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
 		_, err := authService.GetAuthorizedUser(tokens.AccessToken, scopes)
@@ -239,7 +241,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
 		scopes := []string{security.ScopeUserRead}
-		user := userFactory()
+		user := models.UserFactory()
 
 		tokens := authService.GenerateTokens(user, scopes)
 		newTokens, err := authService.RefreshToken(tokens.AccessToken, tokens.RefreshToken)
@@ -261,7 +263,7 @@ func TestAuthService(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		authService := NewAuthService(db)
 		scopes := []string{security.ScopeUserRead}
-		user := userFactory()
+		user := models.UserFactory()
 
 		accessToken := authService.GenerateTokens(user, scopes).AccessToken
 		user.UUID, _ = uuid.NewV4()

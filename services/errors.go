@@ -37,6 +37,18 @@ func (e UserCreateError) Error() string {
 }
 
 /*
+AppCreateError -> this error will be returned on user creation
+failure.
+*/
+type AppCreateError struct {
+	raisedFrom error
+}
+
+func (e AppCreateError) Error() string {
+	return "App cannot be created"
+}
+
+/*
 UserNotFoundError -> this error will be returned on user not found
 exception
 */
