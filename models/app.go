@@ -58,7 +58,6 @@ func NewApp(name string, IconUrl string, RedirectUrls []string, user User) App {
 		Name:            name,
 		IconUrl:         IconUrl,
 		RedirectUrls:    RedirectUrls,
-		User:            user,
 		UserID:          user.ID,
 		secretGenerator: security.NewUniformSecret(),
 	}

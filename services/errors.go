@@ -49,6 +49,18 @@ func (e AppCreateError) Error() string {
 }
 
 /*
+AppNotFoundError -> this error will be returned on user not found
+exception
+*/
+type AppNotFoundError struct {
+	raisedFrom error
+}
+
+func (e AppNotFoundError) Error() string {
+	return "App not found"
+}
+
+/*
 UserNotFoundError -> this error will be returned on user not found
 exception
 */

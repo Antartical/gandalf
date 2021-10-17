@@ -22,10 +22,13 @@ func UserFactory() User {
 AppFactory -> app's factory
 */
 func AppFactory() App {
-	return NewApp(
+	user := UserFactory()
+	app := NewApp(
 		faker.Company().Name(),
 		faker.Internet().Url(),
 		[]string{faker.Internet().Url()},
-		UserFactory(),
+		user,
 	)
+	app.User = user
+	return app
 }

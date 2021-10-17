@@ -19,7 +19,6 @@ type IUserService interface {
 	ReadByEmail(email string) (*models.User, error)
 	Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error)
 	Delete(uuid uuid.UUID) error
-	SoftDelete(uuid uuid.UUID) error
 
 	// User methods
 	Verificate(*models.User)
@@ -105,21 +104,11 @@ func (service UserService) Update(uuid uuid.UUID, userData validators.UserUpdate
 }
 
 /*
-Delete -> removes the user which belongs to the given id from the database.
-*/
-func (service UserService) Delete(uuid uuid.UUID) error {
-	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
-		return UserNotFoundError{err}
-	}
-	return nil
-}
-
-/*
-SoftDelete -> set the field `deletes_at` of the user but it will sitll alive
+Delete -> set the field `deletes_at` of the user but it will still alive
 in database. Soft deleted users will not appear as result of any query that
 not includes `unscoped`
 */
-func (service UserService) SoftDelete(uuid uuid.UUID) error {
+func (service UserService) Delete(uuid uuid.UUID) error {
 	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
 		return UserNotFoundError{err}
 	}
