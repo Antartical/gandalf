@@ -11,6 +11,7 @@ import (
 type IAppService interface {
 	Create(validators.AppCreateData, models.User) (*models.App, error)
 	Read(uuid uuid.UUID) (*models.App, error)
+	ReadByClientID(clientID uuid.UUID) (*models.App, error)
 	Update(uuid.UUID, validators.AppUpdateData) (*models.App, error)
 	Delete(uuid uuid.UUID) error
 }
@@ -45,6 +46,17 @@ func (service AppService) Create(appData validators.AppCreateData, user models.U
 	}
 
 	app.User = user
+	return &app, nil
+}
+
+/*
+ReadByClientID -> read app from database by his Client ID
+*/
+func (service AppService) ReadByClientID(clientID uuid.UUID) (*models.App, error) {
+	var app models.App
+	if err := service.db.Where(&models.App{ClientID: clientID}).First(&app).Error; err != nil {
+		return nil, AppNotFoundError{err}
+	}
 	return &app, nil
 }
 

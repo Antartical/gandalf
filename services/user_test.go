@@ -1,7 +1,6 @@
 package services
 
 import (
-	"gandalf/models"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
@@ -74,7 +73,7 @@ func TestUserServiceRead(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		readUser, err := service.Read(user.UUID)
@@ -103,7 +102,7 @@ func TestUserServiceReadByEmail(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		readUser, err := service.ReadByEmail(user.Email)
@@ -117,7 +116,7 @@ func TestUserServiceReadByEmail(t *testing.T) {
 	t.Run("Test read user by email not found error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		_, err := service.ReadByEmail(user.Email)
 
 		assert.Error(err, UserNotFoundError{nil}.Error())
@@ -132,7 +131,7 @@ func TestUserServiceUpdate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		password := "NewPassword"
@@ -175,7 +174,7 @@ func TestUserServiceDelete(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		err := service.Delete(user.UUID)
@@ -186,7 +185,7 @@ func TestUserServiceDelete(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := models.UserFactory()
+		user := tests.UserFactory()
 
 		err := service.Delete(user.UUID)
 		assert.Error(err, UserNotFoundError{nil}.Error())
@@ -200,7 +199,7 @@ func TestUserServiceVerificate(t *testing.T) {
 	t.Run("Test verify user successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		service := UserService{db}
-		user := models.UserFactory()
+		user := tests.UserFactory()
 
 		service.Verificate(&user)
 
@@ -216,7 +215,7 @@ func TestUserServiceResetPassword(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		newPassword := "wowowowowowoow"
 		service := UserService{db}
-		user := models.UserFactory()
+		user := tests.UserFactory()
 
 		service.ResetPassword(&user, newPassword)
 

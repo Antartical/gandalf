@@ -6,6 +6,7 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
+	"syreclabs.com/go/faker"
 )
 
 type mockedSecretGenerator struct {
@@ -23,14 +24,15 @@ func TestAppModel(t *testing.T) {
 		name := "Fake app"
 		IconUrl := "http://fakeicon.ico"
 		RedirectUrls := []string{"FakeUri"}
-		user := UserFactory()
+		user := User{}
+		user.ID = uint(faker.Number().NumberInt(3))
 
 		app := NewApp(name, IconUrl, RedirectUrls, user)
 
 		assert.Equal(app.Name, name)
 		assert.Equal(app.IconUrl, IconUrl)
 		assert.Equal(app.RedirectUrls, (pq.StringArray)(RedirectUrls))
-		assert.Equal(app.User.ID, user.ID)
+		assert.Equal(app.UserID, user.ID)
 	})
 
 	t.Run("Test constructor fail", func(t *testing.T) {
@@ -38,7 +40,8 @@ func TestAppModel(t *testing.T) {
 		name := "Fake app"
 		IconUrl := "http://fakeicon.ico"
 		RedirectUrls := []string{"FakeUri"}
-		user := UserFactory()
+		user := User{}
+		user.ID = uint(faker.Number().NumberInt(3))
 		secretGenerator := mockedSecretGenerator{
 			generateSecretError: expectedError,
 		}
@@ -47,7 +50,6 @@ func TestAppModel(t *testing.T) {
 			Name:            name,
 			IconUrl:         IconUrl,
 			RedirectUrls:    RedirectUrls,
-			User:            user,
 			UserID:          user.ID,
 			secretGenerator: &secretGenerator,
 		}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"gandalf/models"
 	"gandalf/services"
+	"gandalf/tests"
 	"gandalf/validators"
 	"net/http"
 	"net/http/httptest"
@@ -98,7 +99,7 @@ func TestLogin(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test login successfully", func(t *testing.T) {
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		scopes := []string{"example:scope"}
 		authService := newMockedAuthService(&user, nil, nil, nil)
 		router := setupAuthRouter(authService)
@@ -123,7 +124,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("Test login wrong payload", func(t *testing.T) {
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		authService := newMockedAuthService(nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 
@@ -140,7 +141,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login forbidden user", func(t *testing.T) {
 		raisedError := errors.New("wrong")
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		scopes := []string{"example:scope"}
 		authService := newMockedAuthService(nil, raisedError, nil, nil)
 		router := setupAuthRouter(authService)

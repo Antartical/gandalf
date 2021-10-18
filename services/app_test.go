@@ -1,11 +1,11 @@
 package services
 
 import (
-	"gandalf/models"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 	"syreclabs.com/go/faker"
 )
@@ -27,7 +27,7 @@ func TestAppServiceCreate(t *testing.T) {
 	t.Run("Test app create successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := AppService{db}
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		name := faker.Company().Name()
@@ -54,7 +54,7 @@ func TestAppServiceCreate(t *testing.T) {
 	t.Run("Test app create database error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := AppService{db}
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		user.ID = uint(faker.Number().NumberInt(3))
 		name := faker.Company().Name()
 		iconUrl := faker.Internet().Url()
@@ -68,6 +68,141 @@ func TestAppServiceCreate(t *testing.T) {
 
 		_, err := service.Create(appData, user)
 		assert.Error(err, AppCreateError{nil}.Error())
+	})
+
+}
+
+func TestAppServiceRead(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test read app successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		readApp, err := service.Read(app.UUID)
+
+		assert.NoError(err)
+		assert.Equal(app.ID, readApp.ID)
+
+		db.Unscoped().Delete(&app.User)
+	})
+
+	t.Run("Test read app not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+		uuid, _ := uuid.NewV4()
+
+		_, err := service.Read(uuid)
+		assert.Error(err, AppNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestAppServiceReadByClientID(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test read app by client successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		readApp, err := service.ReadByClientID(app.ClientID)
+
+		assert.NoError(err)
+		assert.Equal(app.ID, readApp.ID)
+
+		db.Unscoped().Delete(&app.User)
+	})
+
+	t.Run("Test read app by client id not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+		clientID, _ := uuid.NewV4()
+
+		_, err := service.ReadByClientID(clientID)
+		assert.Error(err, AppNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestAppServiceUpdate(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test update app successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		name := faker.Company().Name()
+		iconUrl := faker.Internet().Url()
+		redirectUrls := []string{faker.Internet().Url()}
+
+		appData := validators.AppUpdateData{
+			Name:         name,
+			IconUrl:      iconUrl,
+			RedirectUrls: redirectUrls,
+		}
+
+		updatedApp, err := service.Update(app.UUID, appData)
+
+		assert.NoError(err)
+		assert.Equal(name, updatedApp.Name)
+		assert.Equal(iconUrl, updatedApp.IconUrl)
+		assert.Equal(redirectUrls[0], updatedApp.RedirectUrls[0])
+
+		db.Unscoped().Delete(&app.User)
+	})
+
+	t.Run("Test update app not found error", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		uuid, _ := uuid.NewV4()
+		name := faker.Company().Name()
+		iconUrl := faker.Internet().Url()
+		redirectUrls := []string{faker.Internet().Url()}
+		appData := validators.AppUpdateData{
+			Name:         name,
+			IconUrl:      iconUrl,
+			RedirectUrls: redirectUrls,
+		}
+
+		_, err := service.Update(uuid, appData)
+
+		assert.Error(err, AppNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestAppServiceDelete(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test delete app successfully", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		err := service.Delete(app.UUID)
+		assert.NoError(err)
+	})
+
+	t.Run("Test delete app error not found", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+
+		err := service.Delete(app.UUID)
+		assert.Error(err, AppNotFoundError{nil}.Error())
 	})
 
 }

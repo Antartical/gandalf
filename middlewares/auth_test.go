@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gandalf/models"
 	"gandalf/services"
+	"gandalf/tests"
 	"gandalf/validators"
 	"net/http"
 	"net/http/httptest"
@@ -55,7 +56,7 @@ func TestAuthBearerMiddleware(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test HasScopes successfully", func(t *testing.T) {
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		authServiceMock := newAuthServiceMock(&user, nil)
 		middleware := NewAuthBearerMiddleware(authServiceMock)
 		mockContext, _ := gin.CreateTestContext(httptest.NewRecorder())
@@ -102,7 +103,7 @@ func TestAuthBearerMiddleware(t *testing.T) {
 	})
 
 	t.Run("Test GetAuthorizedUser successfully", func(t *testing.T) {
-		user := models.UserFactory()
+		user := tests.UserFactory()
 		authServiceMock := newAuthServiceMock(nil, nil)
 		middleware := NewAuthBearerMiddleware(authServiceMock)
 		mockContext, _ := gin.CreateTestContext(httptest.NewRecorder())

@@ -1,14 +1,16 @@
-package models
+package tests
 
 import (
+	"gandalf/models"
+
 	"syreclabs.com/go/faker"
 )
 
 /*
 UserFactory -> user's factory
 */
-func UserFactory() User {
-	return NewUser(
+func UserFactory() models.User {
+	return models.NewUser(
 		faker.Internet().Email(),
 		faker.Internet().Password(8, 14),
 		faker.Name().FirstName(),
@@ -21,9 +23,9 @@ func UserFactory() User {
 /*
 AppFactory -> app's factory
 */
-func AppFactory() App {
+func AppFactory() models.App {
 	user := UserFactory()
-	app := NewApp(
+	app := models.NewApp(
 		faker.Company().Name(),
 		faker.Internet().Url(),
 		[]string{faker.Internet().Url()},
