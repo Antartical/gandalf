@@ -45,13 +45,12 @@ func main() {
 				os.Exit(1)
 			}
 			data := map[string]interface{}{
-				"Email":           flags["email"].Value,
-				"Password":        flags["password"].Value,
-				"Name":            flags["name"].Value,
-				"Surname":         flags["surname"].Value,
-				"Birthday":        birthday,
-				"Phone":           flags["phone"].Value,
-				"VerificationURL": "",
+				"Email":    flags["email"].Value,
+				"Password": flags["password"].Value,
+				"Name":     flags["name"].Value,
+				"Surname":  flags["surname"].Value,
+				"Birthday": birthday,
+				"Phone":    flags["phone"].Value,
 			}
 
 			var input validators.UserCreateData

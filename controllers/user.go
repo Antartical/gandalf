@@ -8,6 +8,7 @@ import (
 	"gandalf/services"
 	"gandalf/validators"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -90,12 +91,14 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	verifyToken := controller.authService.GenerateTokens(
 		*user, []string{security.ScopeUserVerify},
 	).AccessToken
+
+	url := os.Getenv("EMAIL_VERIFICATION_URL")
 	emailData := validators.PelipperUserVerifyEmail{
 		Email:   user.Email,
 		Name:    user.Name,
 		Subject: "Welcome",
 		VerificationLink: fmt.Sprintf(
-			"%s?code=%s", input.VerificationURL, verifyToken,
+			"%s?code=%s", url, verifyToken,
 		),
 	}
 
@@ -123,12 +126,13 @@ func (controller UserController) ResendVerificationEmail(c *gin.Context) {
 	verifyToken := controller.authService.GenerateTokens(
 		*user, []string{security.ScopeUserVerify},
 	).AccessToken
+	url := os.Getenv("EMAIL_VERIFICATION_URL")
 	emailData := validators.PelipperUserVerifyEmail{
 		Email:   user.Email,
 		Name:    user.Name,
 		Subject: "Welcome",
 		VerificationLink: fmt.Sprintf(
-			"%s?code=%s", input.VerificationURL, verifyToken,
+			"%s?code=%s", url, verifyToken,
 		),
 	}
 	go controller.pelipperService.SendUserVerifyEmail(emailData)
@@ -163,12 +167,13 @@ func (controller UserController) ResendResetPasswordEmail(c *gin.Context) {
 	changePasswordToken := controller.authService.GenerateTokens(
 		*user, []string{security.ScopeUserChangePassword},
 	).AccessToken
+	url := os.Getenv("PASSWORD_CHANGE_URL")
 	emailData := validators.PelipperUserChangePassword{
 		Email:   user.Email,
 		Name:    user.Name,
 		Subject: "Welcome",
 		ChangePasswordLink: fmt.Sprintf(
-			"%s?code=%s", input.VerificationURL, changePasswordToken,
+			"%s?code=%s", url, changePasswordToken,
 		),
 	}
 	go controller.pelipperService.SendUserChangePasswordEmail(emailData)

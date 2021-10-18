@@ -28,12 +28,11 @@ func TestUserServiceCreate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 		userData := validators.UserCreateData{
-			Email:           "test@test.com",
-			Password:        "testestestestest",
-			Name:            "test",
-			Surname:         "test",
-			Birthday:        time.Now(),
-			VerificationURL: "test",
+			Email:    "test@test.com",
+			Password: "testestestestest",
+			Name:     "test",
+			Surname:  "test",
+			Birthday: time.Now(),
 		}
 
 		user, err := service.Create(userData)
@@ -50,12 +49,11 @@ func TestUserServiceCreate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 		userData := validators.UserCreateData{
-			Email:           "test@test.com",
-			Password:        "testestestestest",
-			Name:            "test",
-			Surname:         "test",
-			Birthday:        time.Now(),
-			VerificationURL: "test",
+			Email:    "test@test.com",
+			Password: "testestestestest",
+			Name:     "test",
+			Surname:  "test",
+			Birthday: time.Now(),
 		}
 
 		user, _ := service.Create(userData)

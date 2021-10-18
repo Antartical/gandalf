@@ -202,12 +202,11 @@ func TestCreateUser(t *testing.T) {
 		birthdayStr := "2021-02-15T00:00:00Z"
 		birthdayDat, _ := time.Parse(time.RFC3339, birthdayStr)
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"password":         password,
-			"name":             name,
-			"Surname":          surname,
-			"Birthday":         birthdayStr,
-			"verification_url": "http://test.com",
+			"email":    email,
+			"password": password,
+			"name":     name,
+			"Surname":  surname,
+			"Birthday": birthdayStr,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -262,12 +261,11 @@ func TestCreateUser(t *testing.T) {
 		surname := "test"
 		birthdayStr := "2021-02-15T00:00:00Z"
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"password":         password,
-			"name":             name,
-			"Surname":          surname,
-			"Birthday":         birthdayStr,
-			"verification_url": "http://test.com",
+			"email":    email,
+			"password": password,
+			"name":     name,
+			"Surname":  surname,
+			"Birthday": birthdayStr,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -296,8 +294,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "http://test.com",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -349,8 +346,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "http://test.com",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -445,8 +441,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "http://test.com",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -498,8 +493,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "http://test.com",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
