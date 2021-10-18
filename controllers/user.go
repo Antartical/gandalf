@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 )
 
 /*
@@ -51,6 +52,21 @@ func RegisterUserRoutes(
 		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
 		readRoutes.GET("/me", controller.Me)
+		readRoutes.GET(":uuid", controller.ReadUser)
+	}
+
+	updateRoutes := router.Group("/users")
+	{
+		scopes := []string{security.ScopeUserWrite}
+		updateRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+		updateRoutes.PATCH("/me", controller.UpdateUser)
+	}
+
+	deleteRoutes := router.Group("/users")
+	{
+		scopes := []string{security.ScopeUserDelete}
+		deleteRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+		deleteRoutes.DELETE("/me", controller.DeleteUser)
 	}
 
 	changePasswordRoutes := router.Group("/users")
@@ -104,6 +120,66 @@ func (controller UserController) CreateUser(c *gin.Context) {
 
 	go controller.pelipperService.SendUserVerifyEmail(emailData)
 	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
+}
+
+/*
+UpdateUser -> updates the user who perform the request
+*/
+func (controller UserController) UpdateUser(c *gin.Context) {
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+
+	var input validators.UserUpdateData
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := controller.userService.Update(user.UUID, input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
+}
+
+/*
+ReadUser -> read an user by his UUID
+*/
+func (controller UserController) ReadUser(c *gin.Context) {
+	var input validators.UserReadData
+	if err := c.ShouldBindUri(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	uuid, _ := uuid.FromString(input.UUID)
+	user, err := controller.userService.Read(uuid)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
+}
+
+/*
+Me -> return the user data who perform the request
+*/
+func (controller UserController) Me(c *gin.Context) {
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
+}
+
+/*
+Delente -> deletes the user who performs the request
+*/
+func (controller UserController) DeleteUser(c *gin.Context) {
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	if err := controller.userService.Delete(user.UUID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 /*
@@ -191,12 +267,4 @@ func (controller UserController) ResetUserPassword(c *gin.Context) {
 	}
 	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)
 	c.JSON(http.StatusOK, nil)
-}
-
-/*
-Me -> return the user data who perform the request
-*/
-func (controller UserController) Me(c *gin.Context) {
-	user := controller.authMiddleware.GetAuthorizedUser(c)
-	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
 }

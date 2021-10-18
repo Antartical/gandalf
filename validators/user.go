@@ -1,6 +1,8 @@
 package validators
 
-import "time"
+import (
+	"time"
+)
 
 /*
 UserResendEmail -> user data for resend email notification
@@ -19,6 +21,13 @@ type UserCreateData struct {
 	Surname  string    `json:"surname" binding:"required"`
 	Birthday time.Time `json:"birthday" binding:"required" time_format:"2006-01-02" time_utc:"1"`
 	Phone    string    `json:"phone" binding:"omitempty,e164"`
+}
+
+/*
+UserReadData -> user data for retrieve
+*/
+type UserReadData struct {
+	UUID string `uri:"uuid" binding:"required,uuid4"`
 }
 
 /*
