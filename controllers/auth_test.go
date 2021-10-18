@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gandalf/models"
+	"gandalf/security"
 	"gandalf/services"
 	"gandalf/tests"
 	"gandalf/validators"
@@ -100,7 +101,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login successfully", func(t *testing.T) {
 		user := tests.UserFactory()
-		scopes := []string{"example:scope"}
+		expectedScopes := security.GroupUserAll
 		authService := newMockedAuthService(&user, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		var response gin.H
@@ -108,7 +109,6 @@ func TestLogin(t *testing.T) {
 		payload, _ := json.Marshal(map[string]interface{}{
 			"email":    user.Email,
 			"password": user.Password,
-			"scopes":   scopes,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -120,7 +120,7 @@ func TestLogin(t *testing.T) {
 		assert.Equal(authService.authenticateRecorder.credentials.Email, user.Email)
 		assert.Equal(authService.authenticateRecorder.credentials.Password, user.Password)
 		assert.Equal(authService.generateTokensRecorder.user.Email, user.Email)
-		assert.Equal(authService.generateTokensRecorder.scopes, scopes)
+		assert.Equal(authService.generateTokensRecorder.scopes, expectedScopes)
 	})
 
 	t.Run("Test login wrong payload", func(t *testing.T) {
@@ -142,14 +142,12 @@ func TestLogin(t *testing.T) {
 	t.Run("Test login forbidden user", func(t *testing.T) {
 		raisedError := errors.New("wrong")
 		user := tests.UserFactory()
-		scopes := []string{"example:scope"}
 		authService := newMockedAuthService(nil, raisedError, nil, nil)
 		router := setupAuthRouter(authService)
 
 		payload, _ := json.Marshal(map[string]interface{}{
 			"email":    user.Email,
 			"password": user.Password,
-			"scopes":   scopes,
 		})
 
 		recorder := httptest.NewRecorder()

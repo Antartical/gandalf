@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"gandalf/security"
 	"gandalf/serializers"
 	"gandalf/services"
 	"gandalf/validators"
@@ -46,7 +47,7 @@ func (controller AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	tokens := controller.authService.GenerateTokens(*user, input.Scopes)
+	tokens := controller.authService.GenerateTokens(*user, security.GroupUserAll)
 	c.JSON(http.StatusOK, serializers.NewTokensSerializer(tokens))
 }
 
