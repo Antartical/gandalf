@@ -1,0 +1,145 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Oauth2 server.",
+        "title": "Gandalf API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:9100",
+    "paths": {
+        "/users": {
+            "post": {
+                "description": "Creates a new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Creates a new user",
+                "operationId": "create-user",
+                "parameters": [
+                    {
+                        "description": "Creates a new user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/validators.UserCreateData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.UserSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "helpers.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "error": {
+                    "type": "string",
+                    "example": "status bad request"
+                }
+            }
+        },
+        "serializers.UserSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/serializers.userDataSerializer"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
+        "serializers.userDataSerializer": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "type": "string",
+                    "example": "1997-12-21"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "test@test.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+34666123456"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "4722679b-5a48-4e85-9084-605e8df610f4"
+                }
+            }
+        },
+        "validators.UserCreateData": {
+            "type": "object",
+            "required": [
+                "birthday",
+                "email",
+                "name",
+                "password",
+                "surname"
+            ],
+            "properties": {
+                "birthday": {
+                    "type": "string",
+                    "example": "1997-12-21"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "My@appPassw0rd"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+34666123456"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        }
+    },
+    "x-extension-openapi": {
+        "example": "value on a json format"
+    }
+}
