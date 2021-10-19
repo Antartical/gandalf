@@ -5,12 +5,12 @@ go 1.13
 require (
 	github.com/cockroachdb/apd v1.1.1-0.20181017181144-bced77f817b4 // indirect
 	github.com/deckarep/golang-set v1.7.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/gofrs/uuid v4.1.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/lib/pq v1.10.3

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
 )
 
