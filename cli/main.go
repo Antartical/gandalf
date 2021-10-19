@@ -2,15 +2,21 @@ package main
 
 import (
 	"fmt"
+	"gandalf/bindings"
 	"gandalf/connections"
 	"gandalf/services"
 	"gandalf/validators"
 	"os"
-	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/thatisuday/commando"
+	"gorm.io/gorm/logger"
 )
+
+type RecorderLogger struct {
+	logger.Interface
+	Statements []string
+}
 
 func main() {
 
@@ -25,27 +31,25 @@ func main() {
 		Register("create-user").
 		SetShortDescription("Creates a new user into gandalf database").
 		SetDescription("Insert the given user into the gandalf database").
-		AddFlag("email,e", "user email", commando.String, nil).                                                                                     // required
-		AddFlag("password,p", "user password", commando.String, nil).                                                                               // required
-		AddFlag("name,n", "user name", commando.String, "Agapito").                                                                                 // required
-		AddFlag("surname,sn", "user surname", commando.String, "Disousa").                                                                          // required
-		AddFlag("birthday,b", "user birthday (must have the following format: YYYY-MM-DDT00:00:00Z)", commando.String, "2006-01-02T15:04:05.000Z"). // required
-		AddFlag("phone,b", "user email", commando.String, "+34666123456").                                                                          // required
+		AddFlag("email,e", "user email", commando.String, nil).                                                             // required
+		AddFlag("password,p", "user password", commando.String, nil).                                                       // required
+		AddFlag("name,n", "user name", commando.String, "Agapito").                                                         // required
+		AddFlag("surname,sn", "user surname", commando.String, "Disousa").                                                  // required
+		AddFlag("birthday,b", "user birthday (must have the following format: YYYY-MM-DD)", commando.String, "1997-12-21"). // required
+		AddFlag("phone,ph", "user email", commando.String, "+34666123456").                                                 // required
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			layout := "2006-01-02T15:04:05.000Z"
-			birthday, err := time.Parse(layout, fmt.Sprintf("%v", flags["birthday"].Value))
-			if err != nil {
+			var birthdate bindings.BirthDate
+			if err := birthdate.UnmarshalJSON([]byte(fmt.Sprintf("%v", flags["birthday"].Value))); err != nil {
 				fmt.Println("Birthday has incorrect format")
 				os.Exit(1)
 			}
 			data := map[string]interface{}{
-				"Email":           flags["email"].Value,
-				"Password":        flags["password"].Value,
-				"Name":            flags["name"].Value,
-				"Surname":         flags["surname"].Value,
-				"Birthday":        birthday,
-				"Phone":           flags["phone"].Value,
-				"VerificationURL": "",
+				"Email":    flags["email"].Value,
+				"Password": flags["password"].Value,
+				"Name":     flags["name"].Value,
+				"Surname":  flags["surname"].Value,
+				"Birthday": birthdate,
+				"Phone":    flags["phone"].Value,
 			}
 
 			var input validators.UserCreateData

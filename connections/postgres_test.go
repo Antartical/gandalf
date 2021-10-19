@@ -11,9 +11,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func mockConfigOpen(err error) (func(gorm.Dialector, *gorm.Config) (*gorm.DB, error), *configOpenRecorder) {
+func mockConfigOpen(err error) (func(gorm.Dialector, ...gorm.Option) (*gorm.DB, error), *configOpenRecorder) {
 	recorder := new(configOpenRecorder)
-	return func(dialector gorm.Dialector, config *gorm.Config) (*gorm.DB, error) {
+	return func(dialector gorm.Dialector, opts ...gorm.Option) (*gorm.DB, error) {
+		config := opts[0].(*gorm.Config)
 		*recorder = configOpenRecorder{dialector, config}
 		return nil, err
 	}, recorder

@@ -10,32 +10,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-IAuthBearerMiddleware -> interface for auth based on bearer token middleware
-*/
+// Interface for bearer authentication middleware
 type IAuthBearerMiddleware interface {
 	HasScopes(scopes []string) gin.HandlerFunc
 	GetAuthorizedUser(c *gin.Context) *models.User
 }
 
-/*
-AuthBearerMiddleware -> auth middleware for authenticate users with
-Bearer tokens
-*/
+// Auth middleware for authenticate users with Bearer tokens
 type AuthBearerMiddleware struct {
 	authService auth.IAuthService
 }
 
-/*
-NewAuthBearerMiddleware -> creates a new auth middleware.
-*/
+// Creates a new auth middleware
 func NewAuthBearerMiddleware(authService auth.IAuthService) AuthBearerMiddleware {
 	return AuthBearerMiddleware{authService: authService}
 }
 
-/*
-HasScopes -> check if the user who perform the request has the given scopes
-*/
+// Check if the user who perform the request has the given scopes
 func (middleware AuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearer := strings.Split(c.GetHeader("Authorization"), "Bearer ")
@@ -53,9 +44,7 @@ func (middleware AuthBearerMiddleware) HasScopes(scopes []string) gin.HandlerFun
 	}
 }
 
-/*
-GetAuthorizedUser -> return the authorized user from the given gin context
-*/
+// Return the authorized user from the given gin context
 func (middleware AuthBearerMiddleware) GetAuthorizedUser(c *gin.Context) *models.User {
 	user, exists := c.Get("authorizedUser")
 	if !exists {

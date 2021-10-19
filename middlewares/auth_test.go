@@ -5,35 +5,16 @@ import (
 	"fmt"
 	"gandalf/models"
 	"gandalf/services"
+	"gandalf/tests"
 	"gandalf/validators"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
-
-func userFactory() models.User {
-	userData := validators.UserCreateData{
-		Email:           "test@test.com",
-		Password:        "testestestestest",
-		Name:            "test",
-		Surname:         "test",
-		Birthday:        time.Now(),
-		VerificationURL: "test",
-	}
-	return models.NewUser(
-		userData.Email,
-		userData.Password,
-		userData.Name,
-		userData.Surname,
-		userData.Birthday,
-		userData.Phone,
-	)
-}
 
 type getAuthorizedUserRecorder struct {
 	accessToken string
@@ -75,7 +56,7 @@ func TestAuthBearerMiddleware(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test HasScopes successfully", func(t *testing.T) {
-		user := userFactory()
+		user := tests.UserFactory()
 		authServiceMock := newAuthServiceMock(&user, nil)
 		middleware := NewAuthBearerMiddleware(authServiceMock)
 		mockContext, _ := gin.CreateTestContext(httptest.NewRecorder())
@@ -122,7 +103,7 @@ func TestAuthBearerMiddleware(t *testing.T) {
 	})
 
 	t.Run("Test GetAuthorizedUser successfully", func(t *testing.T) {
-		user := userFactory()
+		user := tests.UserFactory()
 		authServiceMock := newAuthServiceMock(nil, nil)
 		middleware := NewAuthBearerMiddleware(authServiceMock)
 		mockContext, _ := gin.CreateTestContext(httptest.NewRecorder())

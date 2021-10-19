@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"gandalf/helpers"
+	"gandalf/security"
 	"gandalf/serializers"
 	"gandalf/services"
 	"gandalf/validators"
@@ -9,9 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-RegisterAuthRoutes -> register auth endpoints to the given router
-*/
+// Register auth endpoints to the given router
 func RegisterAuthRoutes(router *gin.Engine, authService services.IAuthService) {
 	controller := AuthController{
 		authService: authService,
@@ -24,46 +24,59 @@ func RegisterAuthRoutes(router *gin.Engine, authService services.IAuthService) {
 	}
 }
 
-/*
-AuthController -> controller fot /auth endpoints
-*/
+// Controller fot /auth endpoints
 type AuthController struct {
 	authService services.IAuthService
 }
 
-/*
-Login -> logs the given user into the system
-*/
+// @Summary Login
+// @Description Logs an user into the system
+// @ID auth-login
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body validators.Credentials true "Logs into the system with the given credentials"
+// @Success 200 {object} serializers.TokensSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Failure 403 {object} helpers.HTTPError
+// @Router /auth/login [post]
 func (controller AuthController) Login(c *gin.Context) {
 	var input validators.Credentials
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 	user, err := controller.authService.Authenticate(input)
 	if err != nil {
-		c.JSON(http.StatusForbidden, nil)
+		helpers.AbortWithStatus(c, http.StatusForbidden, err)
 		return
 	}
 
-	tokens := controller.authService.GenerateTokens(*user, input.Scopes)
+	tokens := controller.authService.GenerateTokens(*user, security.GroupUserAll)
 	c.JSON(http.StatusOK, serializers.NewTokensSerializer(tokens))
 }
 
-/*
-Refresh -> refresh the accessing token
-*/
+// @Summary Refresh
+// @Description Refresh the given access token
+// @ID auth-refresh
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body validators.AuthTokens true "Refresh the given access token with the refresh one"
+// @Success 200 {object} serializers.TokensSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Router /auth/refresh [post]
 func (controller AuthController) Refresh(c *gin.Context) {
 	var input validators.AuthTokens
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
 	newTokens, err := controller.authService.RefreshToken(input.AcessToken, input.RefreshToken)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 

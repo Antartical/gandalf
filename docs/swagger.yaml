@@ -1,0 +1,461 @@
+definitions:
+  controllers.pong:
+    properties:
+      data:
+        example: pong
+        type: string
+    type: object
+  helpers.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      error:
+        example: status bad request
+        type: string
+    type: object
+  serializers.TokensSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.tokenDataSerializer'
+      type:
+        example: tokens
+        type: string
+    type: object
+  serializers.UserSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.userDataSerializer'
+      type:
+        example: user
+        type: string
+    type: object
+  serializers.tokenDataSerializer:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        type: string
+      refresh_token:
+        example: kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf
+        type: string
+    type: object
+  serializers.userDataSerializer:
+    properties:
+      birthday:
+        example: "1997-12-21"
+        type: string
+      email:
+        example: test@test.com
+        type: string
+      name:
+        example: John
+        type: string
+      phone:
+        example: "+34666123456"
+        type: string
+      surname:
+        example: Doe
+        type: string
+      uuid:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+    type: object
+  validators.AuthTokens:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        type: string
+      refresh_token:
+        example: kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf
+        type: string
+    required:
+    - access_token
+    - refresh_token
+    type: object
+  validators.Credentials:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+      password:
+        example: My@appPassw0rd
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  validators.UserCreateData:
+    properties:
+      birthday:
+        example: "1997-12-21"
+        type: string
+      email:
+        example: johndoe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      password:
+        example: My@appPassw0rd
+        type: string
+      phone:
+        example: "+34666123456"
+        type: string
+      surname:
+        example: Doe
+        type: string
+    required:
+    - birthday
+    - email
+    - name
+    - password
+    - surname
+    type: object
+  validators.UserResendEmail:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+    required:
+    - email
+    type: object
+  validators.UserUpdateData:
+    properties:
+      password:
+        example: My@appPassw0rd
+        type: string
+      phone:
+        example: "+34666123456"
+        type: string
+    type: object
+host: localhost:9100
+info:
+  contact: {}
+  description: Oauth2 server.
+  title: Gandalf API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs an user into the system
+      operationId: auth-login
+      parameters:
+      - description: Logs into the system with the given credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.TokensSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Login
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh the given access token
+      operationId: auth-refresh
+      parameters:
+      - description: Refresh the given access token with the refresh one
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.AuthTokens'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.TokensSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Refresh
+      tags:
+      - Auth
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: ping the system to healthcare purposes
+      operationId: ping
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.pong'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Ping
+      tags:
+      - Health
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user
+      operationId: user-create
+      parameters:
+      - description: Creates a new user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserCreateData'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Create User
+      tags:
+      - User
+  /users/{uuid}:
+    get:
+      consumes:
+      - application/json
+      description: get an user by his uuid
+      operationId: user-read-uuid
+      parameters:
+      - description: User uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Get user
+      tags:
+      - User
+  /users/email/reset-password/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resend reset password email
+      operationId: user-resend-reset-password-email
+      parameters:
+      - description: resend the reset password email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Resend reset password email
+      tags:
+      - Notification
+  /users/email/verify/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resend verification email
+      operationId: user-resend-verification-email
+      parameters:
+      - description: resen the verification email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Resend verification email
+      tags:
+      - Notification
+  /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: deletes the user who perform the request
+      operationId: user-delete-me
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Delete me
+      tags:
+      - User
+    get:
+      consumes:
+      - application/json
+      description: get the user who performs the request
+      operationId: user-read-me
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Get me
+      tags:
+      - User
+    patch:
+      consumes:
+      - application/json
+      description: updates an user
+      operationId: user-update
+      parameters:
+      - description: Updates the user with the given data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserUpdateData'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Update user
+      tags:
+      - User
+  /users/me/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password
+      operationId: user-reset-password
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Reset user password
+      tags:
+      - User
+  /users/me/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify an user
+      operationId: user-verify
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Verify user
+      tags:
+      - User
+securityDefinitions:
+  OAuth2Password:
+    flow: password
+    scopes:
+      admin: ' Grants read and write access to administrative information'
+      read: ' Grants read access'
+      write: ' Grants write access'
+    tokenUrl: https://localhost:9100/auth/login
+    type: oauth2
+swagger: "2.0"
+x-extension-openapi:
+  example: value on a json format

@@ -1,33 +1,15 @@
 package services
 
 import (
-	"gandalf/models"
+	"gandalf/bindings"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 )
-
-func userFactory() models.User {
-	userData := validators.UserCreateData{
-		Email:           "test@test.com",
-		Password:        "testestestestest",
-		Name:            "test",
-		Surname:         "test",
-		Birthday:        time.Now(),
-		VerificationURL: "test",
-	}
-	return models.NewUser(
-		userData.Email,
-		userData.Password,
-		userData.Name,
-		userData.Surname,
-		userData.Birthday,
-		userData.Phone,
-	)
-}
 
 func TestUserServiceConstructor(t *testing.T) {
 	assert := require.New(t)
@@ -44,14 +26,14 @@ func TestUserServiceCreate(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test user create successfully", func(t *testing.T) {
-		service := UserService{tests.NewTestDatabase(true)}
+		db := tests.NewTestDatabase(false)
+		service := UserService{db}
 		userData := validators.UserCreateData{
-			Email:           "test@test.com",
-			Password:        "testestestestest",
-			Name:            "test",
-			Surname:         "test",
-			Birthday:        time.Now(),
-			VerificationURL: "test",
+			Email:    "test@test.com",
+			Password: "testestestestest",
+			Name:     "test",
+			Surname:  "test",
+			Birthday: bindings.BirthDate(time.Now()),
 		}
 
 		user, err := service.Create(userData)
@@ -61,18 +43,18 @@ func TestUserServiceCreate(t *testing.T) {
 		assert.Equal(user.Name, userData.Name)
 		assert.Equal(user.Surname, userData.Surname)
 		assert.Equal(user.Birthday, userData.Birthday)
+		db.Unscoped().Delete(&user)
 	})
 
 	t.Run("Test user create database error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 		userData := validators.UserCreateData{
-			Email:           "test@test.com",
-			Password:        "testestestestest",
-			Name:            "test",
-			Surname:         "test",
-			Birthday:        time.Now(),
-			VerificationURL: "test",
+			Email:    "test@test.com",
+			Password: "testestestestest",
+			Name:     "test",
+			Surname:  "test",
+			Birthday: bindings.BirthDate(time.Now()),
 		}
 
 		user, _ := service.Create(userData)
@@ -90,7 +72,7 @@ func TestUserServiceRead(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		readUser, err := service.Read(user.UUID)
@@ -104,9 +86,9 @@ func TestUserServiceRead(t *testing.T) {
 	t.Run("Test read user not found error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
-		user := userFactory()
-		_, err := service.Read(user.UUID)
+		uuid, _ := uuid.NewV4()
 
+		_, err := service.Read(uuid)
 		assert.Error(err, UserNotFoundError{nil}.Error())
 	})
 
@@ -119,7 +101,7 @@ func TestUserServiceReadByEmail(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		readUser, err := service.ReadByEmail(user.Email)
@@ -133,7 +115,7 @@ func TestUserServiceReadByEmail(t *testing.T) {
 	t.Run("Test read user by email not found error", func(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
-		user := userFactory()
+		user := tests.UserFactory()
 		_, err := service.ReadByEmail(user.Email)
 
 		assert.Error(err, UserNotFoundError{nil}.Error())
@@ -148,7 +130,7 @@ func TestUserServiceUpdate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		password := "NewPassword"
@@ -171,13 +153,13 @@ func TestUserServiceUpdate(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		uuid, _ := uuid.NewV4()
 		userData := validators.UserUpdateData{
 			Password: "NewPassword",
 			Phone:    "+34666666666",
 		}
 
-		_, err := service.Update(user.UUID, userData)
+		_, err := service.Update(uuid, userData)
 
 		assert.Error(err, UserNotFoundError{nil}.Error())
 	})
@@ -191,7 +173,7 @@ func TestUserServiceDelete(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		user := tests.UserFactory()
 		db.Create(&user)
 
 		err := service.Delete(user.UUID)
@@ -202,37 +184,9 @@ func TestUserServiceDelete(t *testing.T) {
 		db := tests.NewTestDatabase(false)
 		service := UserService{db}
 
-		user := userFactory()
+		user := tests.UserFactory()
 
 		err := service.Delete(user.UUID)
-		assert.Error(err, UserNotFoundError{nil}.Error())
-	})
-
-}
-
-func TestUserServiceSoftDelete(t *testing.T) {
-	assert := require.New(t)
-
-	t.Run("Test soft delete user successfully", func(t *testing.T) {
-		db := tests.NewTestDatabase(false)
-		service := UserService{db}
-
-		user := userFactory()
-		db.Create(&user)
-
-		err := service.SoftDelete(user.UUID)
-		assert.NoError(err)
-
-		db.Unscoped().Delete(&user)
-	})
-
-	t.Run("Test soft delete user error not found", func(t *testing.T) {
-		db := tests.NewTestDatabase(false)
-		service := UserService{db}
-
-		user := userFactory()
-
-		err := service.SoftDelete(user.UUID)
 		assert.Error(err, UserNotFoundError{nil}.Error())
 	})
 
@@ -244,7 +198,7 @@ func TestUserServiceVerificate(t *testing.T) {
 	t.Run("Test verify user successfully", func(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		service := UserService{db}
-		user := userFactory()
+		user := tests.UserFactory()
 
 		service.Verificate(&user)
 
@@ -260,7 +214,7 @@ func TestUserServiceResetPassword(t *testing.T) {
 		db := tests.NewTestDatabase(true)
 		newPassword := "wowowowowowoow"
 		service := UserService{db}
-		user := userFactory()
+		user := tests.UserFactory()
 
 		service.ResetPassword(&user, newPassword)
 

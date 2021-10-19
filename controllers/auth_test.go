@@ -5,35 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"gandalf/models"
+	"gandalf/security"
 	"gandalf/services"
+	"gandalf/tests"
 	"gandalf/validators"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
-
-func userFactory() models.User {
-	userData := validators.UserCreateData{
-		Email:           "test@test.com",
-		Password:        "testestestestest",
-		Name:            "test",
-		Surname:         "test",
-		Birthday:        time.Now(),
-		VerificationURL: "test",
-	}
-	return models.NewUser(
-		userData.Email,
-		userData.Password,
-		userData.Name,
-		userData.Surname,
-		userData.Birthday,
-		userData.Phone,
-	)
-}
 
 type authenticateRecorder struct {
 	credentials validators.Credentials
@@ -118,8 +100,8 @@ func TestLogin(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test login successfully", func(t *testing.T) {
-		user := userFactory()
-		scopes := []string{"example:scope"}
+		user := tests.UserFactory()
+		expectedScopes := security.GroupUserAll
 		authService := newMockedAuthService(&user, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		var response gin.H
@@ -127,7 +109,6 @@ func TestLogin(t *testing.T) {
 		payload, _ := json.Marshal(map[string]interface{}{
 			"email":    user.Email,
 			"password": user.Password,
-			"scopes":   scopes,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -139,11 +120,11 @@ func TestLogin(t *testing.T) {
 		assert.Equal(authService.authenticateRecorder.credentials.Email, user.Email)
 		assert.Equal(authService.authenticateRecorder.credentials.Password, user.Password)
 		assert.Equal(authService.generateTokensRecorder.user.Email, user.Email)
-		assert.Equal(authService.generateTokensRecorder.scopes, scopes)
+		assert.Equal(authService.generateTokensRecorder.scopes, expectedScopes)
 	})
 
 	t.Run("Test login wrong payload", func(t *testing.T) {
-		user := userFactory()
+		user := tests.UserFactory()
 		authService := newMockedAuthService(nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 
@@ -160,15 +141,13 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login forbidden user", func(t *testing.T) {
 		raisedError := errors.New("wrong")
-		user := userFactory()
-		scopes := []string{"example:scope"}
+		user := tests.UserFactory()
 		authService := newMockedAuthService(nil, raisedError, nil, nil)
 		router := setupAuthRouter(authService)
 
 		payload, _ := json.Marshal(map[string]interface{}{
 			"email":    user.Email,
 			"password": user.Password,
-			"scopes":   scopes,
 		})
 
 		recorder := httptest.NewRecorder()

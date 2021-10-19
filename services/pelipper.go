@@ -12,18 +12,13 @@ import (
 	"os"
 )
 
-/*
-IPelipperService -> pelipper interface
-*/
+// Pelipper service interface
 type IPelipperService interface {
 	SendUserVerifyEmail(data validators.PelipperUserVerifyEmail)
 	SendUserChangePasswordEmail(data validators.PelipperUserChangePassword)
 }
 
-/*
-PelipperService -> pelipper is a service through the one we can
-send notifications to users
-*/
+// Pelipper is a service through the one we can send notifications to users
 type PelipperService struct {
 	Host        string
 	SMPTAccount string
@@ -31,9 +26,7 @@ type PelipperService struct {
 	post func(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
-/*
-NewPelipperService -> creates a new pelipper service
-*/
+// Creates a new pelipper service
 func NewPelipperService() PelipperService {
 	return PelipperService{
 		Host:        os.Getenv("PELIPPER_HOST"),
@@ -49,9 +42,7 @@ func (service PelipperService) manageResponse(response *http.Response, err error
 	}
 }
 
-/*
-SendUserVerifyEmail -> send the verification email
-*/
+// Sends the verification email
 func (service PelipperService) SendUserVerifyEmail(data validators.PelipperUserVerifyEmail) {
 	payload, _ := json.Marshal(map[string]string{
 		"from":              service.SMPTAccount,
@@ -66,9 +57,7 @@ func (service PelipperService) SendUserVerifyEmail(data validators.PelipperUserV
 	service.manageResponse(response, err, data.Email)
 }
 
-/*
-SendUserChangePasswordEmail -> send the verification email
-*/
+// Sends the verification email
 func (service PelipperService) SendUserChangePasswordEmail(data validators.PelipperUserChangePassword) {
 	payload, _ := json.Marshal(map[string]string{
 		"from":                 service.SMPTAccount,

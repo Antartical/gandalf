@@ -1,6 +1,6 @@
 language: go
 go:
- - 1.14.4
+ - 1.17.2
 
 branches:
   only: 

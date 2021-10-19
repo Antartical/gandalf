@@ -1,18 +1,13 @@
 package validators
 
-/*
-Credentials -> User credentials through the one he can autenticates himself.
-*/
+// Validator for user credentials data
 type Credentials struct {
-	Email    string   `json:"email" binding:"required,email"`
-	Password string   `json:"password" binding:"required,min=10"`
-	Scopes   []string `json:"scopes" binding:"required"`
+	Email    string `json:"email" binding:"required,email" example:"johndoe@example.com"`
+	Password string `json:"password" binding:"required,min=10" example:"My@appPassw0rd"`
 }
 
-/*
-AuthTokens -> user tokens to be refreshed
-*/
+// Validator for user access tokens data
 type AuthTokens struct {
-	AcessToken   string `json:"access_token" binding:"required"`
-	RefreshToken string `json:"refresh_token" binding:"required"`
+	AcessToken   string `json:"access_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"`
+	RefreshToken string `json:"refresh_token" binding:"required" example:"kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf"`
 }

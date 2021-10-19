@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"gandalf/bindings"
 	"gandalf/middlewares"
 	"gandalf/models"
 	"gandalf/security"
 	"gandalf/services"
+	"gandalf/tests"
 	"gandalf/validators"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
+	"syreclabs.com/go/faker"
 )
 
 type createRecorder struct {
@@ -201,13 +205,13 @@ func TestCreateUser(t *testing.T) {
 		surname := "test"
 		birthdayStr := "2021-02-15T00:00:00Z"
 		birthdayDat, _ := time.Parse(time.RFC3339, birthdayStr)
+		birthday := bindings.BirthDate(birthdayDat)
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"password":         password,
-			"name":             name,
-			"Surname":          surname,
-			"Birthday":         birthdayStr,
-			"verification_url": "test",
+			"email":    email,
+			"password": password,
+			"name":     name,
+			"Surname":  surname,
+			"Birthday": "2021-02-15",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -215,12 +219,14 @@ func TestCreateUser(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
+		t.Log(userService.createRecorder.userData.Birthday)
+
 		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
 		assert.Equal(userService.createRecorder.userData.Email, email)
 		assert.Equal(userService.createRecorder.userData.Password, password)
 		assert.Equal(userService.createRecorder.userData.Name, name)
 		assert.Equal(userService.createRecorder.userData.Surname, surname)
-		assert.Equal(userService.createRecorder.userData.Birthday, birthdayDat)
+		assert.Equal(userService.createRecorder.userData.Birthday, birthday)
 		assert.False(authBearerMiddleware.hasScopesCalled)
 		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
 	})
@@ -260,14 +266,13 @@ func TestCreateUser(t *testing.T) {
 		password := "testtesttesttest"
 		name := "test"
 		surname := "test"
-		birthdayStr := "2021-02-15T00:00:00Z"
+		birthdayStr := "2021-02-15"
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"password":         password,
-			"name":             name,
-			"Surname":          surname,
-			"Birthday":         birthdayStr,
-			"verification_url": "test",
+			"email":    email,
+			"password": password,
+			"name":     name,
+			"Surname":  surname,
+			"Birthday": birthdayStr,
 		})
 
 		recorder := httptest.NewRecorder()
@@ -277,6 +282,103 @@ func TestCreateUser(t *testing.T) {
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
 		assert.Equal(response["error"], expectedError.Error())
+	})
+}
+
+func TestUpdateUser(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test update user successfully", func(t *testing.T) {
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService,
+			newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		password := faker.Internet().Password(10, 14)
+		phone := fmt.Sprintf(
+			"+%s%s",
+			faker.PhoneNumber().AreaCode(),
+			faker.PhoneNumber().SubscriberNumber(9),
+		)
+		payload, _ := json.Marshal(map[string]string{
+			"password": password,
+			"phone":    phone,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/me", bytes.NewBuffer(payload))
+
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		assert.Equal(http.StatusOK, recorder.Result().StatusCode)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
+		assert.Equal(userService.updateRecorder.userData.Password, password)
+		assert.Equal(userService.updateRecorder.userData.Phone, phone)
+	})
+
+	t.Run("Test update user wrong payload", func(t *testing.T) {
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService,
+			newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		password := faker.Internet().Password(10, 14)
+		phone := faker.PhoneNumber().CellPhone()
+		payload, _ := json.Marshal(map[string]string{
+			"password": password,
+			"phone":    phone,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/me", bytes.NewBuffer(payload))
+
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		assert.Equal(http.StatusBadRequest, recorder.Result().StatusCode)
+	})
+
+	t.Run("Test update user db error", func(t *testing.T) {
+		expectedError := errors.New("Whoops!")
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, expectedError, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService,
+			newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		password := faker.Internet().Password(10, 14)
+		phone := fmt.Sprintf(
+			"+%s%s",
+			faker.PhoneNumber().AreaCode(),
+			faker.PhoneNumber().SubscriberNumber(9),
+		)
+		payload, _ := json.Marshal(map[string]string{
+			"password": password,
+			"phone":    phone,
+		})
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("PATCH", "/users/me", bytes.NewBuffer(payload))
+
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		assert.Equal(http.StatusBadRequest, recorder.Result().StatusCode)
 	})
 }
 
@@ -296,16 +398,15 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "test",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(userService.readByEmailRecorder.email, email)
 		assert.Equal(authService.generateTokensRecorder.user.Email, email)
 		assert.False(authBearerMiddleware.hasScopesCalled)
@@ -329,7 +430,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -349,12 +450,11 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "test",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -369,14 +469,7 @@ func TestVerificateUser(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test verificate user successfully", func(t *testing.T) {
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			"testestestestest",
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		expectedScopes := []string{security.ScopeUserVerify}
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
@@ -387,13 +480,13 @@ func TestVerificateUser(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/verify", bytes.NewBuffer([]byte{}))
+		request, _ := http.NewRequest("POST", "/users/me/verify", bytes.NewBuffer([]byte{}))
 		router.ServeHTTP(recorder, request)
 
 		assert.True(authMiddleware.hasScopesCalled)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.True(userService.verificateRecorder.called)
-		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
 	})
 }
@@ -402,14 +495,7 @@ func TestMe(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test Me", func(t *testing.T) {
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			"testestestestest",
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
@@ -445,16 +531,15 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "test",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(userService.readByEmailRecorder.email, email)
 		assert.Equal(authService.generateTokensRecorder.user.Email, email)
 		assert.False(authBearerMiddleware.hasScopesCalled)
@@ -478,7 +563,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -498,12 +583,11 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		email := "test@test.com"
 
 		payload, _ := json.Marshal(map[string]string{
-			"email":            email,
-			"verification_url": "test",
+			"email": email,
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -519,14 +603,7 @@ func TestResetUserPassword(t *testing.T) {
 
 	t.Run("Test verificate user successfully", func(t *testing.T) {
 		password := "testestestestest"
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			password,
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		payload, _ := json.Marshal(map[string]string{
 			"password": password,
 		})
@@ -540,26 +617,19 @@ func TestResetUserPassword(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/me/reset-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 
 		assert.True(authMiddleware.hasScopesCalled)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.Equal(userService.resetPasswordRecorder.password, password)
-		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
 	})
 
 	t.Run("Test verificate user wrong payload", func(t *testing.T) {
 		password := "testestestestest"
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			password,
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		payload, _ := json.Marshal(map[string]string{
 			"wrong": password,
 		})
@@ -572,9 +642,120 @@ func TestResetUserPassword(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/me/reset-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+}
+
+func TestDelete(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test Delete successfully", func(t *testing.T) {
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("DELETE", "/users/me", bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
+	})
+
+	t.Run("Test Delete db error", func(t *testing.T) {
+		expectedError := errors.New("Whoops!")
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, expectedError, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest("DELETE", "/users/me", bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+		assert.True(authMiddleware.getAuthorizedUserCalled)
+	})
+}
+
+func TestReadUser(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test Read successfully", func(t *testing.T) {
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		uuid, _ := uuid.NewV4()
+		url := fmt.Sprintf("/users/%s", uuid.String())
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		assert.Equal(http.StatusOK, recorder.Result().StatusCode)
+	})
+
+	t.Run("Test Read wrong uuid param", func(t *testing.T) {
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		url := fmt.Sprintf("/users/invent")
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+
+	t.Run("Test Read not found", func(t *testing.T) {
+		expectedError := errors.New("Whoops!")
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, expectedError, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupUserRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil),
+			&userService, newPelipperServiceMock(),
+		)
+		var response gin.H
+
+		recorder := httptest.NewRecorder()
+		uuid, _ := uuid.NewV4()
+		url := fmt.Sprintf("/users/%s", uuid)
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusNotFound)
 	})
 }

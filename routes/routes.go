@@ -9,9 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-Routes -> resgister backend routes in the given router
-*/
+// Register backend routes and controllers into the
+// given router
 func Routes(router *gin.Engine) {
 	db := connections.NewGormPostgresConnection().Connect()
 

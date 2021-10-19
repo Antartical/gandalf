@@ -101,4 +101,9 @@ gandalf:
   - POSTGRES_DB_TEST=test
   - POSTGRES_HOST=postgres
   - POSTGRES_PORT=5432
+  - DEFAULT_USER_EMAIL=root@root.com
+  - DEFAULT_USER_PASSWORD=root
+  - EMAIL_VERIFICATION_URL=http://localhost/email/verification
+  - PASSWORD_CHANGE_URL=http://localhost/email/password
+  - ALLOWED_ORIGINS=http://localhost,https://localhost
 ```

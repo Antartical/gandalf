@@ -5,22 +5,17 @@ import (
 )
 
 type tokenDataSerializer struct {
-	AcessToken   string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AcessToken   string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"`
+	RefreshToken string `json:"refresh_token" example:"kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf"`
 }
 
-/*
-TokensSerializer -> token serializer for api output
-*/
+// Bearer auth token serialization struct
 type TokensSerializer struct {
-	ObjectType string              `json:"type"`
+	ObjectType string              `json:"type" example:"tokens"`
 	Data       tokenDataSerializer `json:"data"`
 }
 
-/*
-NewTokensSerializer -> creates a new user serializer and fills it with
-the given user data.
-*/
+// Creates a new user serializer
 func NewTokensSerializer(tokens services.AuthTokens) TokensSerializer {
 	return TokensSerializer{
 		ObjectType: "tokens",
