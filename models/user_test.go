@@ -2,10 +2,12 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"gandalf/bindings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
+	"syreclabs.com/go/faker"
 )
 
 type generatePasswordRecorder struct {
@@ -42,11 +44,15 @@ func TestUserModel(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test constructor", func(t *testing.T) {
-		email := "test@example.com"
-		name := "test"
-		surname := "test test"
-		birthday := time.Now()
-		phone := "+34666"
+		email := faker.Internet().Email()
+		name := faker.Name().FirstName()
+		surname := faker.Name().LastName()
+		birthday := bindings.BirthDate(faker.Date().Birthday(18, 34))
+		phone := fmt.Sprintf(
+			"+%s%s",
+			faker.PhoneNumber().AreaCode(),
+			faker.PhoneNumber().SubscriberNumber(9),
+		)
 
 		user := NewUser(email, "test", name, surname, birthday, phone)
 

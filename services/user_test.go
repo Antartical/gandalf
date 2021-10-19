@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/bindings"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
@@ -32,7 +33,7 @@ func TestUserServiceCreate(t *testing.T) {
 			Password: "testestestestest",
 			Name:     "test",
 			Surname:  "test",
-			Birthday: time.Now(),
+			Birthday: bindings.BirthDate(time.Now()),
 		}
 
 		user, err := service.Create(userData)
@@ -53,7 +54,7 @@ func TestUserServiceCreate(t *testing.T) {
 			Password: "testestestestest",
 			Name:     "test",
 			Surname:  "test",
-			Birthday: time.Now(),
+			Birthday: bindings.BirthDate(time.Now()),
 		}
 
 		user, _ := service.Create(userData)

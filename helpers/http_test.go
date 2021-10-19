@@ -24,3 +24,17 @@ func TestAbortWithStatus(t *testing.T) {
 		assert.Equal(status, recorder.Code)
 	})
 }
+
+func TestHTTPErrror(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test constructor", func(t *testing.T) {
+		status := http.StatusBadRequest
+		err := errors.New("Whoops!")
+
+		httpErrorSerializer := NewHTTPError(status, err)
+
+		assert.Equal(status, httpErrorSerializer.Code)
+		assert.Equal(err.Error(), httpErrorSerializer.Error)
+	})
+}

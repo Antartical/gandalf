@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"gandalf/bindings"
 	"gandalf/models"
 
 	"syreclabs.com/go/faker"
@@ -19,7 +20,7 @@ func UserFactory() models.User {
 		faker.Internet().Password(10, 14),
 		faker.Name().FirstName(),
 		faker.Name().LastName(),
-		faker.Date().Birthday(18, 34),
+		bindings.BirthDate(faker.Date().Birthday(18, 34)),
 		phone,
 	)
 }

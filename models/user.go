@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"gandalf/bindings"
 	"gandalf/security"
 
 	"github.com/gofrs/uuid"
@@ -16,13 +17,13 @@ type User struct {
 	LastLogin time.Time
 
 	// Mandatory fields
-	UUID     uuid.UUID `gorm:"index:usr_uuid;unique;type:uuid;default:uuid_generate_v4()"`
-	Email    string    `gorm:"not null;index:usr_email;unique"`
-	Password string    `gorm:"not null"`
-	Name     string    `gorm:"not null"`
-	Surname  string    `gorm:"not null"`
-	Birthday time.Time `gorm:"not null"`
-	Verified bool      `gorm:"default:false"`
+	UUID     uuid.UUID          `gorm:"index:usr_uuid;unique;type:uuid;default:uuid_generate_v4()"`
+	Email    string             `gorm:"not null;index:usr_email;unique"`
+	Password string             `gorm:"not null"`
+	Name     string             `gorm:"not null"`
+	Surname  string             `gorm:"not null"`
+	Birthday bindings.BirthDate `gorm:"not null"`
+	Verified bool               `gorm:"default:false"`
 
 	// Optional fields
 	Phone string
@@ -60,7 +61,7 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 }
 
 // Creates a new user
-func NewUser(email string, password string, name string, surname string, birthday time.Time, phone string) User {
+func NewUser(email string, password string, name string, surname string, birthday bindings.BirthDate, phone string) User {
 	user := User{
 		Email:    email,
 		Name:     name,

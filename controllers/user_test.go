@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gandalf/bindings"
 	"gandalf/middlewares"
 	"gandalf/models"
 	"gandalf/security"
@@ -204,12 +205,13 @@ func TestCreateUser(t *testing.T) {
 		surname := "test"
 		birthdayStr := "2021-02-15T00:00:00Z"
 		birthdayDat, _ := time.Parse(time.RFC3339, birthdayStr)
+		birthday := bindings.BirthDate(birthdayDat)
 		payload, _ := json.Marshal(map[string]string{
 			"email":    email,
 			"password": password,
 			"name":     name,
 			"Surname":  surname,
-			"Birthday": birthdayStr,
+			"Birthday": "2021-02-15",
 		})
 
 		recorder := httptest.NewRecorder()
@@ -217,12 +219,14 @@ func TestCreateUser(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
+		t.Log(userService.createRecorder.userData.Birthday)
+
 		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
 		assert.Equal(userService.createRecorder.userData.Email, email)
 		assert.Equal(userService.createRecorder.userData.Password, password)
 		assert.Equal(userService.createRecorder.userData.Name, name)
 		assert.Equal(userService.createRecorder.userData.Surname, surname)
-		assert.Equal(userService.createRecorder.userData.Birthday, birthdayDat)
+		assert.Equal(userService.createRecorder.userData.Birthday, birthday)
 		assert.False(authBearerMiddleware.hasScopesCalled)
 		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
 	})
@@ -262,7 +266,7 @@ func TestCreateUser(t *testing.T) {
 		password := "testtesttesttest"
 		name := "test"
 		surname := "test"
-		birthdayStr := "2021-02-15T00:00:00Z"
+		birthdayStr := "2021-02-15"
 		payload, _ := json.Marshal(map[string]string{
 			"email":    email,
 			"password": password,
@@ -312,7 +316,6 @@ func TestUpdateUser(t *testing.T) {
 
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
-		t.Log(recorder.Body)
 		assert.Equal(http.StatusOK, recorder.Result().StatusCode)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.Equal(userService.updateRecorder.userData.Password, password)
@@ -466,14 +469,7 @@ func TestVerificateUser(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test verificate user successfully", func(t *testing.T) {
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			"testestestestest",
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		expectedScopes := []string{security.ScopeUserVerify}
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
@@ -499,14 +495,7 @@ func TestMe(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test Me", func(t *testing.T) {
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			"testestestestest",
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
@@ -614,14 +603,7 @@ func TestResetUserPassword(t *testing.T) {
 
 	t.Run("Test verificate user successfully", func(t *testing.T) {
 		password := "testestestestest"
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			password,
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		payload, _ := json.Marshal(map[string]string{
 			"password": password,
 		})
@@ -647,14 +629,7 @@ func TestResetUserPassword(t *testing.T) {
 
 	t.Run("Test verificate user wrong payload", func(t *testing.T) {
 		password := "testestestestest"
-		authorizedUser := models.NewUser(
-			"test@test.com",
-			password,
-			"test",
-			"test",
-			time.Now(),
-			"+34666666666",
-		)
+		authorizedUser := tests.UserFactory()
 		payload, _ := json.Marshal(map[string]string{
 			"wrong": password,
 		})

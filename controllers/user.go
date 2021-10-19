@@ -15,7 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// RegisterUserRoutes -> register user endpoints to the given router
+// Register user endpoints to the given router
 func RegisterUserRoutes(
 	router *gin.Engine,
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
@@ -77,7 +77,7 @@ func RegisterUserRoutes(
 	}
 }
 
-// UserController -> controller fot /users endpoints
+// Controller for /users endpoints
 type UserController struct {
 	authService     services.IAuthService
 	userService     services.IUserService
@@ -90,9 +90,9 @@ type UserController struct {
 // @ID create-user
 // @Accept json
 // @Produce json
-// @Param user body validators.UserCreateData true "the user who will be created in the database"
-// @Success 200 {object} serializers.UserSerializer
-// @Failure 400 {object} serializers.HTTPErrorSerializer
+// @Param user body validators.UserCreateData true "Creates a new user"
+// @Success 201 {object} serializers.UserSerializer
+// @Failure 400 {object} helpers.HTTPError
 // @Router /users [post]
 func (controller UserController) CreateUser(c *gin.Context) {
 	var input validators.UserCreateData

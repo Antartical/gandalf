@@ -1,19 +1,19 @@
 package serializers
 
 import (
+	"gandalf/bindings"
 	"gandalf/models"
-	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type userDataSerializer struct {
-	UUID     uuid.UUID `json:"uuid" example:"4722679b-5a48-4e85-9084-605e8df610f4"`
-	Email    string    `json:"email" example:"test@test.com"`
-	Name     string    `json:"name" example:"John"`
-	Surname  string    `json:"surname" example:"Doe"`
-	Birthday time.Time `json:"birthday" example:""`
-	Phone    string    `json:"phone" example:"+34666123456"`
+	UUID     uuid.UUID          `json:"uuid" example:"4722679b-5a48-4e85-9084-605e8df610f4"`
+	Email    string             `json:"email" example:"test@test.com"`
+	Name     string             `json:"name" example:"John"`
+	Surname  string             `json:"surname" example:"Doe"`
+	Birthday bindings.BirthDate `json:"birthday" example:"1997-12-21"`
+	Phone    string             `json:"phone" example:"+34666123456"`
 }
 
 // User serialization struct
