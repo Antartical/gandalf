@@ -20,6 +20,7 @@ RUN go get github.com/codegangsta/gin
 RUN go get -u github.com/pressly/goose/cmd/goose
 COPY ./ ./
 RUN go build -o /bin/gandalf-cli ./cli/main.go
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 EXPOSE 9100
 
