@@ -1,8 +1,6 @@
 package security
 
-/*
-Authentication scopes
-*/
+// Security scopes
 const (
 	ScopeUserAuthorizeApp   = "user:authorized-app"
 	ScopeUserRead           = "user:read"
@@ -12,9 +10,7 @@ const (
 	ScopeUserDelete         = "user:delete"
 )
 
-/*
-Group scopes
-*/
+// Group scopes
 var (
 	GroupUserAll = []string{ScopeUserAuthorizeApp, ScopeUserRead, ScopeUserWrite, ScopeUserDelete}
 )

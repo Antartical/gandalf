@@ -10,9 +10,9 @@ import (
 
 const clientSecretLenght = 32
 
-/*
-App -> the app itself
-*/
+// An app represents the application that will use Gandalf as an Oauth2
+// backend. It has a relationship with the user that manage it and those
+// ones that have signed into the app with Gandalf.
 type App struct {
 	gorm.Model
 
@@ -38,10 +38,7 @@ type App struct {
 	secretGenerator security.ISecretGenerator `gorm:"-"`
 }
 
-/*
-GenerateClientSecret -> generates the client's secret for the
-oauth2 connection
-*/
+// Generates the client's secret for the oauth2 connection
 func (app *App) generateClientSecret() {
 	secret, err := app.secretGenerator.GenerateSecret(clientSecretLenght)
 	if err != nil {
@@ -50,9 +47,7 @@ func (app *App) generateClientSecret() {
 	app.ClientSecret = secret
 }
 
-/*
-NewApp -> creates a new app
-*/
+// Creates a new app
 func NewApp(name string, IconUrl string, RedirectUrls []string, user User) App {
 	app := App{
 		Name:            name,

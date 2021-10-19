@@ -8,9 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-/*
-IUserService -> interface for user service
-*/
+// Interface for user service
 type IUserService interface {
 
 	// CRUD operations
@@ -25,23 +23,17 @@ type IUserService interface {
 	ResetPassword(user *models.User, password string)
 }
 
-/*
-UserService -> user's service
-*/
+// User's service
 type UserService struct {
 	db *gorm.DB
 }
 
-/*
-NewUserService -> creates a new user service
-*/
+// Creates a new user service
 func NewUserService(db *gorm.DB) UserService {
 	return UserService{db}
 }
 
-/*
-Create -> creates a new user
-*/
+// Creates a new user
 func (service UserService) Create(userData validators.UserCreateData) (*models.User, error) {
 	user := models.NewUser(
 		userData.Email,
@@ -59,9 +51,7 @@ func (service UserService) Create(userData validators.UserCreateData) (*models.U
 	return &user, nil
 }
 
-/*
-Read -> read user from database by his UUID
-*/
+// Read user from database by his UUID
 func (service UserService) Read(uuid uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := service.db.Where(&models.User{UUID: uuid}).First(&user).Error; err != nil {
@@ -70,9 +60,7 @@ func (service UserService) Read(uuid uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-/*
-ReadByEmail -> read user from database by his email
-*/
+// Read user from database by his email
 func (service UserService) ReadByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := service.db.Where(&models.User{Email: email, Verified: false}).First(&user).Error; err != nil {
@@ -81,10 +69,7 @@ func (service UserService) ReadByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-/*
-Update -> updates the user which belongs to the given ID according to
-the given user data
-*/
+// Updates the user which belongs to the given ID according to the given user data
 func (service UserService) Update(uuid uuid.UUID, userData validators.UserUpdateData) (*models.User, error) {
 	user, err := service.Read(uuid)
 	if err != nil {
@@ -103,11 +88,9 @@ func (service UserService) Update(uuid uuid.UUID, userData validators.UserUpdate
 	return user, nil
 }
 
-/*
-Delete -> set the field `deletes_at` of the user but it will still alive
-in database. Soft deleted users will not appear as result of any query that
-not includes `unscoped`
-*/
+// Set the field `deletes_at` of the user but it will still alive
+// in database. Soft deleted users will not appear as result of any query that
+// not includes `unscoped`
 func (service UserService) Delete(uuid uuid.UUID) error {
 	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
 		return UserNotFoundError{err}
@@ -115,17 +98,13 @@ func (service UserService) Delete(uuid uuid.UUID) error {
 	return nil
 }
 
-/*
-Verificate -> verificates the given user
-*/
+// Verificates the given user
 func (service UserService) Verificate(user *models.User) {
 	user.Verified = true
 	service.db.Save(user)
 }
 
-/*
-ResetPassword -> reset the user password to the given one
-*/
+// Reset the user password to the given one
 func (service UserService) ResetPassword(user *models.User, password string) {
 	user.SetPassword(password)
 	service.db.Save(user)

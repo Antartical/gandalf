@@ -8,9 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-/*
-GormPostgresConnection -> postgres gorm connection
-*/
+// Struct with the necessary data to create a new gorm connection
+// with a postgres database
 type GormPostgresConnection struct {
 	Host     string
 	Port     string
@@ -20,9 +19,7 @@ type GormPostgresConnection struct {
 	OpenDb   func(gorm.Dialector, ...gorm.Option) (*gorm.DB, error)
 }
 
-/*
-Connect -> return the database connection
-*/
+// Connects to the database by using the addr
 func (connection GormPostgresConnection) Connect() *gorm.DB {
 	addr := connection.getPostgresDSN()
 	db, err := connection.OpenDb(postgres.Open(addr), &gorm.Config{})
@@ -32,6 +29,7 @@ func (connection GormPostgresConnection) Connect() *gorm.DB {
 	return db
 }
 
+// Creates the postgres uri for the driver in order to connect with it
 func (connection GormPostgresConnection) getPostgresDSN() string {
 	return fmt.Sprintf(
 		"host=%v port=%v user=%v dbname=%v password=%v sslmode=disable",
@@ -43,9 +41,7 @@ func (connection GormPostgresConnection) getPostgresDSN() string {
 	)
 }
 
-/*
-NewGormPostgresConnection -> returns new postgres connection
-*/
+// Creates a new postgres connection
 func NewGormPostgresConnection() GormPostgresConnection {
 	return GormPostgresConnection{
 		Host:     os.Getenv("POSTGRES_HOST"),

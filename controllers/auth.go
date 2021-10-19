@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"gandalf/helpers"
 	"gandalf/security"
 	"gandalf/serializers"
 	"gandalf/services"
@@ -38,12 +39,12 @@ Login -> logs the given user into the system
 func (controller AuthController) Login(c *gin.Context) {
 	var input validators.Credentials
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 	user, err := controller.authService.Authenticate(input)
 	if err != nil {
-		c.JSON(http.StatusForbidden, nil)
+		helpers.AbortWithStatus(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -58,13 +59,13 @@ func (controller AuthController) Refresh(c *gin.Context) {
 	var input validators.AuthTokens
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
 	newTokens, err := controller.authService.RefreshToken(input.AcessToken, input.RefreshToken)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 

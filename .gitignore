@@ -13,6 +13,7 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+docs/
 
 # Generated from live server and local files
 .env

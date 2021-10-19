@@ -9,9 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-/*
-User -> the user itself
-*/
+// Represents the basic unit of information for the users that have signed
+// into an application by using gandalf
 type User struct {
 	gorm.Model
 	LastLogin time.Time
@@ -36,10 +35,7 @@ type User struct {
 	ConnectedApps []App `gorm:"many2many:user_has_signin_on_app;"`
 }
 
-/*
-SetPassword -> set user password by hashing the given one. If not hasher is
-present, checkOrSetHasher will set the default one.
-*/
+// Set user password by hashing the given one
 func (u *User) SetPassword(password string) {
 	hash, err := u.hasher.GeneratePassword(password)
 	if err != nil {
@@ -48,10 +44,7 @@ func (u *User) SetPassword(password string) {
 	u.Password = string(hash)
 }
 
-/*
-VerifyPassword -> verify if the given password match with the user one. If not
-hasher is present, checkOrSetHasher will set the default one.
-*/
+// Verify if the given password match with the user one
 func (u User) VerifyPassword(password string) bool {
 	err := u.hasher.VerifyPassword(u.Password, password)
 	if err != nil {
@@ -60,17 +53,13 @@ func (u User) VerifyPassword(password string) bool {
 	return true
 }
 
-/*
-AfterFind -> Gorm hook after find it in the database.
-*/
+// Gorm hook after find it in the database
 func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	u.hasher = security.NewBcryptHasher()
 	return nil
 }
 
-/*
-NewUser -> creates a new user
-*/
+// Creates a new user
 func NewUser(email string, password string, name string, surname string, birthday time.Time, phone string) User {
 	user := User{
 		Email:    email,

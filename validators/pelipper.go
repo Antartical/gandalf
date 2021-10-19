@@ -1,8 +1,6 @@
 package validators
 
-/*
-PelipperUserVerifyEmail -> pelipper user verify email struct
-*/
+// Validator for send verification email with pelipper
 type PelipperUserVerifyEmail struct {
 	Email            string `binding:"required,email"`
 	Name             string `binding:"required"`
@@ -10,9 +8,7 @@ type PelipperUserVerifyEmail struct {
 	VerificationLink string `binding:"required"`
 }
 
-/*
-PelipperUserChangePassword -> pelipper user change password email struct
-*/
+// Validator for send change password email with pelipper
 type PelipperUserChangePassword struct {
 	Email              string `binding:"required,email"`
 	Name               string `binding:"required"`

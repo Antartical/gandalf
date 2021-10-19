@@ -8,9 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-/*
-NewTestDatabase -> return the database test connection
-*/
+// Creates a test database connection
 func NewTestDatabase(dryRun bool) *gorm.DB {
 	connection := connections.GormPostgresConnection{
 		Host:     os.Getenv("POSTGRES_HOST"),

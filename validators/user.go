@@ -4,43 +4,33 @@ import (
 	"time"
 )
 
-/*
-UserResendEmail -> user data for resend email notification
-*/
+// Validator for resend email notification to an user
 type UserResendEmail struct {
-	Email string `json:"email" binding:"required,email"`
+	Email string `json:"email" binding:"required,email" example:"johndoe@example.com"`
 }
 
-/*
-UserCreateData -> user data for creation
-*/
+// Validator for user creation
 type UserCreateData struct {
-	Email    string    `json:"email" binding:"required,email"`
-	Password string    `json:"password" binding:"required,min=10"`
-	Name     string    `json:"name" binding:"required"`
-	Surname  string    `json:"surname" binding:"required"`
+	Email    string    `json:"email" binding:"required,email" example:"johndoe@example.com"`
+	Password string    `json:"password" binding:"required,min=10" example:"My@appPassw0rd"`
+	Name     string    `json:"name" binding:"required" example:"John"`
+	Surname  string    `json:"surname" binding:"required" example:"Doe"`
 	Birthday time.Time `json:"birthday" binding:"required" time_format:"2006-01-02" time_utc:"1"`
-	Phone    string    `json:"phone" binding:"omitempty,e164"`
+	Phone    string    `json:"phone" binding:"omitempty,e164" example:"+34666123456"`
 }
 
-/*
-UserReadData -> user data for retrieve
-*/
+// Validator for retrieve user by his uuid
 type UserReadData struct {
-	UUID string `uri:"uuid" binding:"required,uuid4"`
+	UUID string `uri:"uuid" binding:"required,uuid4" example:"4722679b-5a48-4e85-9084-605e8df610f4"`
 }
 
-/*
-UserResetPasswordData -> user data for update
-*/
+// Validator for reset user password
 type UserResetPasswordData struct {
-	Password string `json:"password" binding:"min=10,required"`
+	Password string `json:"password" binding:"min=10,required" example:"My@appPassw0rd"`
 }
 
-/*
-UserUpdateData -> user data for update
-*/
+// Validator for user update
 type UserUpdateData struct {
-	Password string `json:"password" binding:"omitempty,min=10"`
-	Phone    string `json:"phone" binding:"omitempty,e164"`
+	Password string `json:"password" binding:"omitempty,min=10" example:"My@appPassw0rd"`
+	Phone    string `json:"phone" binding:"omitempty,e164" example:"+34666123456"`
 }

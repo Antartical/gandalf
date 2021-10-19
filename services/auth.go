@@ -15,9 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-/*
-accessTokenClaims -> JWT for accessing resources
-*/
+// JWT for accessing resources
 type accessTokenClaims struct {
 	jwt.StandardClaims
 	UUID   uuid.UUID
@@ -25,10 +23,7 @@ type accessTokenClaims struct {
 	Scopes []string
 }
 
-/*
-newAccessTokenClaims -> creates claims for the access token from the given
-params
-*/
+// Creates claims for the access token from the given params
 func newAccessTokenClaims(user models.User, scopes []string, ttl time.Duration) accessTokenClaims {
 	return accessTokenClaims{
 		UUID:   user.UUID,
@@ -40,18 +35,13 @@ func newAccessTokenClaims(user models.User, scopes []string, ttl time.Duration) 
 	}
 }
 
-/*
-refreshTokenClaims -> JWT for refreshing access token
-*/
+// JWT for refreshing access token
 type refreshTokenClaims struct {
 	jwt.StandardClaims
 	UUID uuid.UUID
 }
 
-/*
-newRefreshTokenClaims -> creates claims for the refresh token from the given
-params
-*/
+// Creates claims for the refresh token from the given params
 func newRefreshTokenClaims(user models.User, ttl time.Duration) refreshTokenClaims {
 	return refreshTokenClaims{
 		UUID: user.UUID,
@@ -61,17 +51,13 @@ func newRefreshTokenClaims(user models.User, ttl time.Duration) refreshTokenClai
 	}
 }
 
-/*
-AuthTokens -> contains user tokens for authenticate and refresh
-*/
+// Contains user tokens for authenticate and refresh
 type AuthTokens struct {
 	AccessToken  string
 	RefreshToken string
 }
 
-/*
-IAuthService -> interface for auth service
-*/
+// Interface for auth service
 type IAuthService interface {
 	Authenticate(credentials validators.Credentials) (*models.User, error)
 	GenerateTokens(user models.User, scopes []string) AuthTokens
@@ -79,9 +65,7 @@ type IAuthService interface {
 	RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error)
 }
 
-/*
-AuthService -> auth service
-*/
+// Auth service
 type AuthService struct {
 	db        *gorm.DB
 	tokenTTL  time.Duration `env:"JWT_TOKEN_TTL"`
@@ -93,9 +77,7 @@ type AuthService struct {
 	keyfunc              func(token *jwt.Token) (interface{}, error)
 }
 
-/*
-NewAuthService -> creates a new auth service
-*/
+// Creates a new auth service
 func NewAuthService(db *gorm.DB) AuthService {
 
 	keyfunc := func(token *jwt.Token) (interface{}, error) {
@@ -116,9 +98,7 @@ func NewAuthService(db *gorm.DB) AuthService {
 	}
 }
 
-/*
-getClaims -> Get token claims
-*/
+// Get token claims
 func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInvalid bool) error {
 	tkn, err := service.parseTokenWithClaims(token, data, service.keyfunc)
 
@@ -129,9 +109,7 @@ func (service AuthService) getClaims(token string, data jwt.Claims, errorOnInval
 	return nil
 }
 
-/*
-signToken -> sign the given token with the private key
-*/
+//Sign the given token with the private key
 func (service AuthService) signToken(token *jwt.Token) string {
 	signedToken, err := token.SignedString(service.tokenKey)
 	if err != nil {
@@ -140,10 +118,7 @@ func (service AuthService) signToken(token *jwt.Token) string {
 	return signedToken
 }
 
-/*
-Authenticate -> authenticates an user with the given credentials and
-returns it
-*/
+// Authenticates an user with the given credentials and returns it
 func (service AuthService) Authenticate(credentials validators.Credentials) (*models.User, error) {
 	var user models.User
 	if err := service.db.Where(&models.User{Email: credentials.Email, Verified: true}).First(&user).Error; err != nil {
@@ -157,10 +132,7 @@ func (service AuthService) Authenticate(credentials validators.Credentials) (*mo
 	return &user, nil
 }
 
-/*
-GenerateTokens -> generate a pair access token for the given user with the
-given scopes
-*/
+// Generate a pair access token for the given user with the given scopes
 func (service AuthService) GenerateTokens(user models.User, scopes []string) AuthTokens {
 	accessToken := service.signToken(service.newTokenWithClaims(
 		jwt.SigningMethodHS256, newAccessTokenClaims(user, scopes, service.tokenTTL),
@@ -172,10 +144,8 @@ func (service AuthService) GenerateTokens(user models.User, scopes []string) Aut
 	return AuthTokens{accessToken, refreshToken}
 }
 
-/*
-GetAuthorizedUser -> return the user who perform the request if he has
-been authorized with the given scopes
-*/
+// Return the user who perform the request if he has
+// been authorized with the given scopes
 func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*models.User, error) {
 	accessClaims := &accessTokenClaims{}
 	err := service.getClaims(token, accessClaims, true)
@@ -215,9 +185,7 @@ func (service AuthService) GetAuthorizedUser(token string, scopes []string) (*mo
 	return &user, nil
 }
 
-/*
-RefreshToken -> refresh the access token with his refresh one
-*/
+// Refresh the access token with his refresh one
 func (service AuthService) RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error) {
 	accessClaims := &accessTokenClaims{}
 	refreshClaims := &refreshTokenClaims{}

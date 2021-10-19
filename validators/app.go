@@ -1,19 +1,15 @@
 package validators
 
-/*
-AppCreateData -> app data for creation
-*/
+// Validator struct for app creation
 type AppCreateData struct {
-	Name         string   `json:"name" binding:"required"`
-	IconUrl      string   `json:"icon_url" binding:"omitempty,url"`
-	RedirectUrls []string `json:"redirect_urls" binding:"omitempty"`
+	Name         string   `json:"name" binding:"required" example:"MySuperApp"`
+	IconUrl      string   `json:"icon_url" binding:"omitempty,url" example:"http://youriconurl.dev"`
+	RedirectUrls []string `json:"redirect_urls" binding:"omitempty" example:"http://yourredirecturl.dev"`
 }
 
-/*
-AppUpdateData -> app data for update
-*/
+// Validator struct for app update
 type AppUpdateData struct {
-	Name         string   `json:"name" binding:"omitempty"`
-	IconUrl      string   `json:"icon_url" binding:"omitempty,url"`
-	RedirectUrls []string `json:"redirect_urls" binding:"omitempty"`
+	Name         string   `json:"name" binding:"omitempty" example:"MySuperApp"`
+	IconUrl      string   `json:"icon_url" binding:"omitempty,url" example:"http://youriconurl.dev"`
+	RedirectUrls []string `json:"redirect_urls" binding:"omitempty" example:"http://yourredirecturl.dev"`
 }

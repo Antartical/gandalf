@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"gandalf/helpers"
 	"gandalf/middlewares"
 	"gandalf/security"
 	"gandalf/serializers"
@@ -14,9 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-/*
-RegisterUserRoutes -> register user endpoints to the given router
-*/
+// RegisterUserRoutes -> register user endpoints to the given router
 func RegisterUserRoutes(
 	router *gin.Engine,
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
@@ -78,9 +77,7 @@ func RegisterUserRoutes(
 	}
 }
 
-/*
-UserController -> controller fot /users endpoints
-*/
+// UserController -> controller fot /users endpoints
 type UserController struct {
 	authService     services.IAuthService
 	userService     services.IUserService
@@ -88,19 +85,25 @@ type UserController struct {
 	authMiddleware  middlewares.IAuthBearerMiddleware
 }
 
-/*
-CreateUser -> creates a new user
-*/
+// @Summary Creates a new user
+// @Description Creates a new user
+// @ID create-user
+// @Accept json
+// @Produce json
+// @Param user body validators.UserCreateData true "the user who will be created in the database"
+// @Success 200 {object} serializers.UserSerializer
+// @Failure 400 {object} serializers.HTTPErrorSerializer
+// @Router /users [post]
 func (controller UserController) CreateUser(c *gin.Context) {
 	var input validators.UserCreateData
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
 	user, err := controller.userService.Create(input)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -130,7 +133,7 @@ func (controller UserController) UpdateUser(c *gin.Context) {
 
 	var input validators.UserUpdateData
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -149,7 +152,7 @@ ReadUser -> read an user by his UUID
 func (controller UserController) ReadUser(c *gin.Context) {
 	var input validators.UserReadData
 	if err := c.ShouldBindUri(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 	uuid, _ := uuid.FromString(input.UUID)
@@ -176,7 +179,7 @@ Delente -> deletes the user who performs the request
 func (controller UserController) DeleteUser(c *gin.Context) {
 	user := controller.authMiddleware.GetAuthorizedUser(c)
 	if err := controller.userService.Delete(user.UUID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 	c.JSON(http.StatusNoContent, gin.H{})
@@ -189,7 +192,7 @@ one
 func (controller UserController) ResendVerificationEmail(c *gin.Context) {
 	var input validators.UserResendEmail
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -230,7 +233,7 @@ one
 func (controller UserController) ResendResetPasswordEmail(c *gin.Context) {
 	var input validators.UserResendEmail
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -262,7 +265,7 @@ ResetUserPassword -> reset the password ftom the user who perform the request
 func (controller UserController) ResetUserPassword(c *gin.Context) {
 	var input validators.UserResetPasswordData
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
 	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)

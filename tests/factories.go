@@ -7,9 +7,7 @@ import (
 	"syreclabs.com/go/faker"
 )
 
-/*
-UserFactory -> user's factory
-*/
+// Creates an user with fake data. It won't be saved into the db
 func UserFactory() models.User {
 	phone := fmt.Sprintf(
 		"+%s%s",
@@ -26,9 +24,7 @@ func UserFactory() models.User {
 	)
 }
 
-/*
-AppFactory -> app's factory
-*/
+// Creates an app with fake data. It won't be saved into the db
 func AppFactory() models.App {
 	user := UserFactory()
 	app := models.NewApp(

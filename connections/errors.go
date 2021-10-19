@@ -2,9 +2,7 @@ package connections
 
 import "fmt"
 
-/*
-DatabaseConnectionError -> this error will be returned on connection failure.
-*/
+// Represents an error that happens during the database connection
 type DatabaseConnectionError struct {
 	addr string
 }
