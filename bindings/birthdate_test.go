@@ -20,4 +20,12 @@ func TestBirthdate(t *testing.T) {
 		assert.Equal(date, birthdate.Format("2006-01-02"))
 		assert.Equal(expectedMarshaledDate, string(marshaledDate))
 	})
+
+	t.Run("Test binding error", func(t *testing.T) {
+		var birthdate BirthDate
+		date := "fake format"
+		err := birthdate.UnmarshalJSON([]byte(date))
+
+		assert.Error(err)
+	})
 }
