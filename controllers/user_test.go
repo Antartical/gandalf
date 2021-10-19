@@ -402,11 +402,11 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(userService.readByEmailRecorder.email, email)
 		assert.Equal(authService.generateTokensRecorder.user.Email, email)
 		assert.False(authBearerMiddleware.hasScopesCalled)
@@ -430,7 +430,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -454,7 +454,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/verify/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -480,13 +480,13 @@ func TestVerificateUser(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/verify", bytes.NewBuffer([]byte{}))
+		request, _ := http.NewRequest("POST", "/users/me/verify", bytes.NewBuffer([]byte{}))
 		router.ServeHTTP(recorder, request)
 
 		assert.True(authMiddleware.hasScopesCalled)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.True(userService.verificateRecorder.called)
-		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
 	})
 }
@@ -535,11 +535,11 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(userService.readByEmailRecorder.email, email)
 		assert.Equal(authService.generateTokensRecorder.user.Email, email)
 		assert.False(authBearerMiddleware.hasScopesCalled)
@@ -563,7 +563,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -587,7 +587,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/reset/resend", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -617,13 +617,13 @@ func TestResetUserPassword(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/me/reset-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 
 		assert.True(authMiddleware.hasScopesCalled)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
 		assert.Equal(userService.resetPasswordRecorder.password, password)
-		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
 		assert.Equal(authMiddleware.requestedScopes, &expectedScopes)
 	})
 
@@ -642,7 +642,7 @@ func TestResetUserPassword(t *testing.T) {
 		)
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("PATCH", "/users/reset", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/users/me/reset-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)

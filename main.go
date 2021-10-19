@@ -20,6 +20,12 @@ import (
 // @description Oauth2 server.
 // @host localhost:9100
 // @x-extension-openapi {"example": "value on a json format"}
+// @securitydefinitions.oauth2.password OAuth2Password
+// @tokenUrl https://localhost:9100/auth/login
+// @scope.read Grants read access
+// @scope.write Grants write access
+// @scope.admin Grants read and write access to administrative information
+// @query.collection.format multi
 func main() {
 	docs.SwaggerInfo.Title = "Gandalf API"
 	router := gin.Default()

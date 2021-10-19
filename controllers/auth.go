@@ -11,9 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-RegisterAuthRoutes -> register auth endpoints to the given router
-*/
+// Register auth endpoints to the given router
 func RegisterAuthRoutes(router *gin.Engine, authService services.IAuthService) {
 	controller := AuthController{
 		authService: authService,
@@ -26,16 +24,22 @@ func RegisterAuthRoutes(router *gin.Engine, authService services.IAuthService) {
 	}
 }
 
-/*
-AuthController -> controller fot /auth endpoints
-*/
+// Controller fot /auth endpoints
 type AuthController struct {
 	authService services.IAuthService
 }
 
-/*
-Login -> logs the given user into the system
-*/
+// @Summary Login
+// @Description Logs an user into the system
+// @ID auth-login
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body validators.Credentials true "Logs into the system with the given credentials"
+// @Success 200 {object} serializers.TokensSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Failure 403 {object} helpers.HTTPError
+// @Router /auth/login [post]
 func (controller AuthController) Login(c *gin.Context) {
 	var input validators.Credentials
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -52,9 +56,16 @@ func (controller AuthController) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, serializers.NewTokensSerializer(tokens))
 }
 
-/*
-Refresh -> refresh the accessing token
-*/
+// @Summary Refresh
+// @Description Refresh the given access token
+// @ID auth-refresh
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body validators.AuthTokens true "Refresh the given access token with the refresh one"
+// @Success 200 {object} serializers.TokensSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Router /auth/refresh [post]
 func (controller AuthController) Refresh(c *gin.Context) {
 	var input validators.AuthTokens
 

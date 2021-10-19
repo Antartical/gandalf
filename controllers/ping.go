@@ -6,19 +6,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-RegisterPingRoutes -> register ping endpoints to the given router
-*/
+// Register ping endpoints to the given router
 func RegisterPingRoutes(router *gin.Engine) {
 	router.GET("/ping", Ping)
 }
 
-/*
-Ping -> handler for /ping route
-*/
+type pong struct {
+	Data string `json:"data" example:"pong"`
+}
+
+// @Summary Ping
+// @Description  ping the system to healthcare purposes
+// @ID ping
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} pong
+// @Failure 500 {object} helpers.HTTPError
+// @Router /ping [get]
 func Ping(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": "pong",
-	})
+	c.JSON(http.StatusOK, pong{Data: "pong"})
 	return
 }
