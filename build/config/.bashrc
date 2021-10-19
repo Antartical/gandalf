@@ -27,6 +27,10 @@ get_env_prompt() {
   echo "$ENV_PROMPT"
 }
 
+create_default_user(){
+    gandalf-cli create-user -e "$DEFAULT_USER_EMAIL" --password "$DEFAULT_USER_PASSWORD"
+}
+
 
 PS1='🐳  \[\033[1;36m\]\h \[\033[1;34m\]\W\[\033[0;35m\] \[\033[1;36m\]# \[\033[0m\]'
 PS1="$(get_env_prompt) $PS1"
