@@ -24,6 +24,10 @@ func Routes(router *gin.Engine) {
 
 	// Routes
 	controllers.RegisterAuthRoutes(router, authService)
+	controllers.RegisterNotificationRoutes(
+		router, authService,
+		userService, pelipperService,
+	)
 	controllers.RegisterPingRoutes(router)
 	controllers.RegisterUserRoutes(
 		router, authBearerMiddleware,

@@ -193,6 +193,64 @@ paths:
       summary: Refresh
       tags:
       - Auth
+  /notifications/emails/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends reset password email
+      operationId: notifications-emails-reset-password
+      parameters:
+      - description: resend the reset password email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Sends reset password email
+      tags:
+      - Notification
+  /notifications/emails/verify:
+    post:
+      consumes:
+      - application/json
+      description: Sends verification email
+      operationId: notifications-emails-verification
+      parameters:
+      - description: sends the verification email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Sends verification email
+      tags:
+      - Notification
   /ping:
     get:
       consumes:
@@ -270,64 +328,6 @@ paths:
       summary: Get user
       tags:
       - User
-  /users/email/reset-password/resend:
-    post:
-      consumes:
-      - application/json
-      description: Resend reset password email
-      operationId: user-resend-reset-password-email
-      parameters:
-      - description: resend the reset password email
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/validators.UserResendEmail'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Resend reset password email
-      tags:
-      - Notification
-  /users/email/verify/resend:
-    post:
-      consumes:
-      - application/json
-      description: Resend verification email
-      operationId: user-resend-verification-email
-      parameters:
-      - description: resen the verification email
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/validators.UserResendEmail'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Resend verification email
-      tags:
-      - Notification
   /users/me:
     delete:
       consumes:
