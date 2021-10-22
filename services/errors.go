@@ -1,5 +1,7 @@
 package services
 
+import "fmt"
+
 // This error will be returned on user authentication failure
 type AuthenticationError struct {
 	raisedFrom error
@@ -36,7 +38,7 @@ func (e AppCreateError) Error() string {
 	return "App cannot be created"
 }
 
-// This error will be returned on user not found exception
+// This error will be returned on app not found exception
 type AppNotFoundError struct {
 	raisedFrom error
 }
@@ -52,4 +54,14 @@ type UserNotFoundError struct {
 
 func (e UserNotFoundError) Error() string {
 	return "User not found"
+}
+
+// Error for app authorization on unknown redirect uir
+type RedirectUriDoesNotMatch struct {
+	raisedFrom  error
+	redirectUri string
+}
+
+func (e RedirectUriDoesNotMatch) Error() string {
+	return fmt.Sprintf("Redirect uri is not registered for the app, %s", e.redirectUri)
 }

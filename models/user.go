@@ -24,6 +24,7 @@ type User struct {
 	Surname  string             `gorm:"not null"`
 	Birthday bindings.BirthDate `gorm:"not null"`
 	Verified bool               `gorm:"default:false"`
+	Staff    bool               `gorm:"default:false"`
 
 	// Optional fields
 	Phone string

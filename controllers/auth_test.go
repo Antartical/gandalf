@@ -67,9 +67,13 @@ func newMockedAuthService(
 	}
 }
 
-func (service *mockAuthService) Authenticate(credentials validators.Credentials) (*models.User, error) {
+func (service *mockAuthService) Authenticate(credentials validators.Credentials, isStaff bool) (*models.User, error) {
 	service.authenticateRecorder.credentials = credentials
 	return service.returnedUser, service.authenticateError
+}
+
+func (service *mockAuthService) Authorize(app *models.App, user *models.User, data validators.OauthAuthorizeData) (string, error) {
+	return "", nil
 }
 
 func (service *mockAuthService) GenerateTokens(user models.User, scopes []string) services.AuthTokens {
@@ -101,7 +105,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login successfully", func(t *testing.T) {
 		user := tests.UserFactory()
-		expectedScopes := security.GroupUserAll
+		expectedScopes := security.GroupUserSelf
 		authService := newMockedAuthService(&user, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		var response gin.H

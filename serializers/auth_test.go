@@ -20,7 +20,7 @@ func TestTokensSerializer(t *testing.T) {
 
 		serializedTokens := NewTokensSerializer(tokens)
 
-		assert.Equal(serializedTokens.Data.AcessToken, accesToken)
-		assert.Equal(serializedTokens.Data.RefreshToken, refreshToken)
+		assert.Equal(serializedTokens.AcessToken, accesToken)
+		assert.Equal(serializedTokens.RefreshToken, refreshToken)
 	})
 }

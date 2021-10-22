@@ -2,15 +2,19 @@ package security
 
 // Security scopes
 const (
-	ScopeUserAuthorizeApp   = "user:authorized-app"
-	ScopeUserRead           = "user:read"
-	ScopeUserVerify         = "user:verify"
-	ScopeUserChangePassword = "user:change-password"
-	ScopeUserWrite          = "user:write"
-	ScopeUserDelete         = "user:delete"
+	ScopeUserAuthorizationCode = "user:authorization-code"
+	ScopeUserAuthorizeApp      = "user:authorized-app"
+	ScopeUserVerify            = "user:verify"
+	ScopeUserChangePassword    = "user:change-password"
+	ScopeUserRead              = "user:read"
+	ScopeUserWrite             = "user:write"
+	ScopeUserDelete            = "user:delete"
+
+	ScopeAppRead = "app:read"
 )
 
 // Group scopes
 var (
-	GroupUserAll = []string{ScopeUserAuthorizeApp, ScopeUserRead, ScopeUserWrite, ScopeUserDelete}
+	GroupUserSelf          = []string{ScopeUserAuthorizeApp, ScopeUserRead, ScopeUserWrite, ScopeUserDelete}
+	GroupUserOauth2Request = []string{ScopeUserAuthorizeApp, ScopeUserRead, ScopeAppRead}
 )

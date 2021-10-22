@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"gandalf/bindings"
+	"gandalf/helpers"
 	"gandalf/models"
 	"gandalf/security"
 	"gandalf/validators"
@@ -55,14 +57,16 @@ func newRefreshTokenClaims(user models.User, ttl time.Duration) refreshTokenClai
 type AuthTokens struct {
 	AccessToken  string
 	RefreshToken string
+	ExpiresIn    time.Duration
 }
 
 // Interface for auth service
 type IAuthService interface {
-	Authenticate(credentials validators.Credentials) (*models.User, error)
+	Authenticate(credentials validators.Credentials, isStaff bool) (*models.User, error)
 	GenerateTokens(user models.User, scopes []string) AuthTokens
 	GetAuthorizedUser(accessToken string, scopes []string) (*models.User, error)
 	RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error)
+	Authorize(*models.App, *models.User, validators.OauthAuthorizeData) (string, error)
 }
 
 // Auth service
@@ -119,9 +123,9 @@ func (service AuthService) signToken(token *jwt.Token) string {
 }
 
 // Authenticates an user with the given credentials and returns it
-func (service AuthService) Authenticate(credentials validators.Credentials) (*models.User, error) {
+func (service AuthService) Authenticate(credentials validators.Credentials, isStaff bool) (*models.User, error) {
 	var user models.User
-	if err := service.db.Where(&models.User{Email: credentials.Email, Verified: true}).First(&user).Error; err != nil {
+	if err := service.db.Where(&models.User{Email: credentials.Email, Verified: true, Staff: isStaff}).First(&user).Error; err != nil {
 		return nil, AuthenticationError{err}
 	}
 
@@ -141,7 +145,7 @@ func (service AuthService) GenerateTokens(user models.User, scopes []string) Aut
 		jwt.SigningMethodHS256, newRefreshTokenClaims(user, service.tokenRTTL),
 	))
 
-	return AuthTokens{accessToken, refreshToken}
+	return AuthTokens{accessToken, refreshToken, service.tokenTTL}
 }
 
 // Return the user who perform the request if he has
@@ -204,5 +208,30 @@ func (service AuthService) RefreshToken(accessToken string, refreshToken string)
 	accessClaims.ExpiresAt = time.Now().Add(service.tokenTTL * time.Minute).Unix()
 	newAccessToken := service.signToken(service.newTokenWithClaims(jwt.SigningMethodHS256, accessClaims))
 
-	return &AuthTokens{newAccessToken, refreshToken}, nil
+	return &AuthTokens{newAccessToken, refreshToken, service.tokenTTL}, nil
+}
+
+// Associate the given app with the given app in order to save that the user
+// has signin on the given app. Returns the authorization code
+func (service AuthService) Authorize(app *models.App, user *models.User, data validators.OauthAuthorizeData) (string, error) {
+
+	if !helpers.PqStringArrayContains(app.RedirectUrls, data.RedirectURI) {
+		return "", RedirectUriDoesNotMatch{redirectUri: data.RedirectURI}
+	}
+
+	authorizationCode := service.GenerateTokens(*user, []string{security.ScopeUserAuthorizationCode}).AccessToken
+	claim := models.NewClaim(
+		data.RedirectURI,
+		authorizationCode,
+		bindings.ScopeArrayToStringArray(data.Scopes),
+		*user,
+		*app,
+	)
+
+	service.db.Create(&claim)
+	service.db.Model(app).Association("ConnectedUsers").Append(user)
+	service.db.Model(user).Association("ConnectedApps").Find(&user.ConnectedApps)
+	service.db.Model(app).Association("ConnectedUser").Find(&app.ConnectedUsers)
+
+	return authorizationCode, nil
 }

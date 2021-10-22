@@ -89,7 +89,7 @@ func (service AppService) Update(uuid uuid.UUID, appData validators.AppUpdateDat
 // in database. Soft deleted apps will not appear as result of any query that
 // not includes `unscoped`
 func (service AppService) Delete(uuid uuid.UUID) error {
-	if err := service.db.Unscoped().Where(&models.App{UUID: uuid}).Delete(&models.App{}).Error; err != nil {
+	if err := service.db.Where(&models.App{UUID: uuid}).Delete(&models.App{}).Error; err != nil {
 		return AppNotFoundError{err}
 	}
 	return nil

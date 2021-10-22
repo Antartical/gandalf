@@ -32,7 +32,7 @@ type App struct {
 	UserID uint
 
 	// Users that have been sign on the app
-	ConnectedUsers []User `gorm:"many2many:user_has_signin_on_app;"`
+	ConnectedUsers []User `gorm:"many2many:user_has_signin_on_app;constraint:OnDelete:CASCADE"`
 
 	// Untracked fields
 	secretGenerator security.ISecretGenerator `gorm:"-"`

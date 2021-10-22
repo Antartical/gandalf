@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/bindings"
 	"gandalf/security"
 	"gandalf/tests"
 	"gandalf/validators"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
+	"syreclabs.com/go/faker"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
@@ -126,7 +128,7 @@ func TestAuthService(t *testing.T) {
 			Password: plainPassword,
 		}
 
-		authenticatedUser, err := authService.Authenticate(credentials)
+		authenticatedUser, err := authService.Authenticate(credentials, false)
 
 		assert.NoError(err)
 		assert.Equal(authenticatedUser.UUID, user.UUID)
@@ -144,7 +146,7 @@ func TestAuthService(t *testing.T) {
 			Password: plainPassword,
 		}
 
-		_, err := authService.Authenticate(credentials)
+		_, err := authService.Authenticate(credentials, false)
 
 		assert.Error(err, AuthenticationError{nil}.Error())
 	})
@@ -162,7 +164,7 @@ func TestAuthService(t *testing.T) {
 			Password: plainInventedPassword,
 		}
 
-		_, err := authService.Authenticate(credentials)
+		_, err := authService.Authenticate(credentials, false)
 
 		assert.Error(err, AuthenticationError{nil}.Error())
 		db.Unscoped().Delete(&user)
@@ -273,4 +275,62 @@ func TestAuthService(t *testing.T) {
 		assert.Error(err, AuthenticationError{}.Error())
 	})
 
+}
+
+func TestAppServiceAuthorize(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test authorize success", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		db.Create(&app)
+		db.Create(&user)
+
+		input := validators.OauthAuthorizeData{
+			ClientID:    app.ClientID.String(),
+			RedirectURI: app.RedirectUrls[0],
+			Scopes:      []bindings.Scope{security.ScopeUserRead},
+			State:       "state",
+		}
+
+		service.Authorize(&app, &user, input)
+		assert.Equal(1, len(user.ConnectedApps))
+		assert.Equal(1, len(app.ConnectedUsers))
+		assert.Equal(user.ID, app.ConnectedUsers[0].ID)
+		assert.Equal(app.ID, user.ConnectedApps[0].ID)
+
+		db.Delete(&app)
+		db.Delete(&user)
+	})
+
+	t.Run("Test authorize fail", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+		fakeRedirectUri := faker.Internet().Url()
+		expectedError := RedirectUriDoesNotMatch{
+			redirectUri: fakeRedirectUri,
+		}
+		//expectedMsg := fmt.Sprintf("Redirect uri is not registered for the app, %s", fakeRedirectUri)
+
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		db.Create(&app)
+		db.Create(&user)
+
+		input := validators.OauthAuthorizeData{
+			ClientID:    app.ClientID.String(),
+			RedirectURI: fakeRedirectUri,
+			Scopes:      []bindings.Scope{security.ScopeUserRead},
+			State:       "state",
+		}
+
+		_, err := service.Authorize(&app, &user, input)
+		assert.Error(err, expectedError, expectedError.Error())
+
+		db.Delete(&app)
+		db.Delete(&user)
+	})
 }

@@ -92,7 +92,7 @@ func (service UserService) Update(uuid uuid.UUID, userData validators.UserUpdate
 // in database. Soft deleted users will not appear as result of any query that
 // not includes `unscoped`
 func (service UserService) Delete(uuid uuid.UUID) error {
-	if err := service.db.Unscoped().Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
+	if err := service.db.Where(&models.User{UUID: uuid}).Delete(&models.User{}).Error; err != nil {
 		return UserNotFoundError{err}
 	}
 	return nil

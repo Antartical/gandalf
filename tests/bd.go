@@ -22,6 +22,8 @@ func NewTestDatabase(dryRun bool) *gorm.DB {
 	db := connection.Connect()
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.App{})
+	db.AutoMigrate(&models.Claim{})
+	db.Set("gorm:auto_preload", true)
 
 	return db.Session(&gorm.Session{DryRun: dryRun})
 }

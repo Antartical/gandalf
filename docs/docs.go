@@ -35,7 +35,7 @@ var doc = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Login",
+                "summary": "Login admin",
                 "operationId": "auth-login",
                 "parameters": [
                     {
@@ -356,7 +356,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/validators.UserUpdateData"
+                            "$ref": "#/definitions/validators.AppCreateData"
                         }
                     }
                 ],
@@ -583,6 +583,31 @@ var doc = `{
                 }
             }
         },
+        "validators.AppCreateData": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "icon_url": {
+                    "type": "string",
+                    "example": "http://youriconurl.dev"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "MySuperApp"
+                },
+                "redirect_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://yourredirecturl.dev"
+                    ]
+                }
+            }
+        },
         "validators.AuthTokens": {
             "type": "object",
             "required": [
@@ -662,19 +687,6 @@ var doc = `{
                 "email": {
                     "type": "string",
                     "example": "johndoe@example.com"
-                }
-            }
-        },
-        "validators.UserUpdateData": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "My@appPassw0rd"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+34666123456"
                 }
             }
         }
