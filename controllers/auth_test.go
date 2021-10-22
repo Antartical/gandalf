@@ -94,6 +94,10 @@ func (service *mockAuthService) RefreshToken(accessToken string, refreshToken st
 	return &services.AuthTokens{AccessToken: "", RefreshToken: refreshToken}, service.refreshTokenError
 }
 
+func (service *mockAuthService) ExchangeOauthToken(app models.App, data validators.OauthExchangeToken) (*services.AuthTokens, error) {
+	return nil, nil
+}
+
 func setupAuthRouter(authService services.IAuthService) *gin.Engine {
 	router := gin.Default()
 	RegisterAuthRoutes(router, authService)

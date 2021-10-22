@@ -13,7 +13,7 @@ type Claim struct {
 	gorm.Model
 
 	// Mandatory fields
-	UUID              uuid.UUID      `gorm:"index:app_uuid;unique;type:uuid;default:uuid_generate_v4()"`
+	UUID              uuid.UUID      `gorm:"index:claim_uuid;unique;type:uuid;default:uuid_generate_v4()"`
 	RedirectUrl       string         `gorm:"not null"`
 	AuthorizationCode string         `gorm:"not null"`
 	Scopes            pq.StringArray `gorm:"type:text[]"`

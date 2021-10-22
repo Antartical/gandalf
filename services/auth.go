@@ -67,6 +67,7 @@ type IAuthService interface {
 	GetAuthorizedUser(accessToken string, scopes []string) (*models.User, error)
 	RefreshToken(accessToken string, refreshToken string) (*AuthTokens, error)
 	Authorize(*models.App, *models.User, validators.OauthAuthorizeData) (string, error)
+	ExchangeOauthToken(models.App, validators.OauthExchangeToken) (*AuthTokens, error)
 }
 
 // Auth service
@@ -212,7 +213,7 @@ func (service AuthService) RefreshToken(accessToken string, refreshToken string)
 }
 
 // Associate the given app with the given app in order to save that the user
-// has signin on the given app. Returns the authorization code
+// has signin on the given app. Returns the authorization code and error.
 func (service AuthService) Authorize(app *models.App, user *models.User, data validators.OauthAuthorizeData) (string, error) {
 
 	if !helpers.PqStringArrayContains(app.RedirectUrls, data.RedirectURI) {
@@ -234,4 +235,32 @@ func (service AuthService) Authorize(app *models.App, user *models.User, data va
 	service.db.Model(app).Association("ConnectedUser").Find(&app.ConnectedUsers)
 
 	return authorizationCode, nil
+}
+
+// Produces an access token with the requested scopes if the given data belongs to the
+// created claim. Otherwise an error will be returned
+func (service AuthService) ExchangeOauthToken(app models.App, data validators.OauthExchangeToken) (*AuthTokens, error) {
+	if !helpers.PqStringArrayContains(app.RedirectUrls, data.RedirectUrl) {
+		return nil, RedirectUriDoesNotMatch{redirectUri: data.RedirectUrl}
+	}
+
+	user, err := service.GetAuthorizedUser(data.AuthorizationCode, []string{security.ScopeUserAuthorizationCode})
+	if err != nil {
+		return nil, err
+	}
+
+	clause := &models.Claim{
+		AuthorizationCode: data.AuthorizationCode,
+		RedirectUrl:       data.RedirectUrl,
+		AppID:             app.ID,
+		UserID:            user.ID,
+	}
+
+	var claim models.Claim
+	if err := service.db.Where(clause).First(&claim).Error; err != nil {
+		return nil, ClaimDoesNotExist{err}
+	}
+
+	tokens := service.GenerateTokens(*user, claim.Scopes)
+	return &tokens, nil
 }

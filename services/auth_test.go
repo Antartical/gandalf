@@ -2,6 +2,7 @@ package services
 
 import (
 	"gandalf/bindings"
+	"gandalf/models"
 	"gandalf/security"
 	"gandalf/tests"
 	"gandalf/validators"
@@ -329,6 +330,152 @@ func TestAppServiceAuthorize(t *testing.T) {
 
 		_, err := service.Authorize(&app, &user, input)
 		assert.Error(err, expectedError, expectedError.Error())
+
+		db.Delete(&app)
+		db.Delete(&user)
+	})
+}
+
+func TestAppServiceExchangeOauthToken(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test Exchange token success", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		user.Verified = true
+		scopes := []string{security.ScopeUserRead}
+		db.Create(&app)
+		db.Create(&user)
+
+		tokens := service.GenerateTokens(user, []string{security.ScopeUserAuthorizationCode})
+
+		data := validators.OauthExchangeToken{
+			GrantType:         "authorization_code",
+			ClientID:          app.ClientID.String(),
+			ClientSecret:      app.ClientSecret,
+			AuthorizationCode: tokens.AccessToken,
+			RedirectUrl:       app.RedirectUrls[0],
+		}
+		claim := models.NewClaim(
+			data.RedirectUrl,
+			data.AuthorizationCode,
+			scopes,
+			user,
+			app,
+		)
+		db.Create(&claim)
+
+		resultTokens, err := service.ExchangeOauthToken(app, data)
+
+		assert.Nil(err)
+		assert.NotNil(resultTokens)
+
+		db.Delete(&claim)
+		db.Delete(&app)
+		db.Delete(&user)
+	})
+
+	t.Run("Test Exchange cannot get user", func(t *testing.T) {
+		expectedError := AuthorizationError{}
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		user.Verified = true
+		scopes := []string{security.ScopeUserRead}
+		db.Create(&app)
+		db.Create(&user)
+
+		tokens := service.GenerateTokens(user, scopes)
+
+		data := validators.OauthExchangeToken{
+			GrantType:         "authorization_code",
+			ClientID:          app.ClientID.String(),
+			ClientSecret:      app.ClientSecret,
+			AuthorizationCode: tokens.AccessToken,
+			RedirectUrl:       app.RedirectUrls[0],
+		}
+		claim := models.NewClaim(
+			data.RedirectUrl,
+			data.AuthorizationCode,
+			scopes,
+			user,
+			app,
+		)
+		db.Create(&claim)
+
+		_, err := service.ExchangeOauthToken(app, data)
+
+		assert.Error(expectedError, err)
+
+		db.Delete(&claim)
+		db.Delete(&app)
+		db.Delete(&user)
+	})
+
+	t.Run("Test Exchange token redirect url does not match", func(t *testing.T) {
+		expectedError := RedirectUriDoesNotMatch{}
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		user.Verified = true
+		scopes := []string{security.ScopeUserRead}
+		db.Create(&app)
+		db.Create(&user)
+
+		tokens := service.GenerateTokens(user, scopes)
+
+		data := validators.OauthExchangeToken{
+			GrantType:         "authorization_code",
+			ClientID:          app.ClientID.String(),
+			ClientSecret:      app.ClientSecret,
+			AuthorizationCode: tokens.AccessToken,
+			RedirectUrl:       faker.Internet().Url(),
+		}
+		claim := models.NewClaim(
+			data.RedirectUrl,
+			data.AuthorizationCode,
+			scopes,
+			user,
+			app,
+		)
+		db.Create(&claim)
+
+		_, err := service.ExchangeOauthToken(app, data)
+
+		assert.Error(expectedError, err)
+
+		db.Delete(&claim)
+		db.Delete(&app)
+		db.Delete(&user)
+	})
+
+	t.Run("Test Exchange token claim does not exist", func(t *testing.T) {
+		expectedError := ClaimDoesNotExist{}
+		db := tests.NewTestDatabase(false)
+		service := NewAuthService(db)
+		app := tests.AppFactory()
+		user := tests.UserFactory()
+		user.Verified = true
+		db.Create(&app)
+		db.Create(&user)
+
+		tokens := service.GenerateTokens(user, []string{security.ScopeUserAuthorizationCode})
+
+		data := validators.OauthExchangeToken{
+			GrantType:         "authorization_code",
+			ClientID:          app.ClientID.String(),
+			ClientSecret:      app.ClientSecret,
+			AuthorizationCode: tokens.AccessToken,
+			RedirectUrl:       app.RedirectUrls[0],
+		}
+
+		_, err := service.ExchangeOauthToken(app, data)
+
+		assert.Error(err, expectedError.Error())
 
 		db.Delete(&app)
 		db.Delete(&user)

@@ -65,3 +65,12 @@ type RedirectUriDoesNotMatch struct {
 func (e RedirectUriDoesNotMatch) Error() string {
 	return fmt.Sprintf("Redirect uri is not registered for the app, %s", e.redirectUri)
 }
+
+// Error for exchange auth when claim does not exist
+type ClaimDoesNotExist struct {
+	raisedFrom error
+}
+
+func (e ClaimDoesNotExist) Error() string {
+	return "Claim does not exist"
+}

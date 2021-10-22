@@ -56,6 +56,10 @@ func (service authServiceMock) RefreshToken(accessToken string, refreshToken str
 	return nil, nil
 }
 
+func (service authServiceMock) ExchangeOauthToken(app models.App, data validators.OauthExchangeToken) (*services.AuthTokens, error) {
+	return nil, nil
+}
+
 func TestAuthBearerMiddleware(t *testing.T) {
 	assert := require.New(t)
 
