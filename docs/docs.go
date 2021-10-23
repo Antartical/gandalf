@@ -199,6 +199,133 @@ var doc = `{
                 }
             }
         },
+        "/oauth/authorize": {
+            "post": {
+                "description": "authorize app",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Oauth"
+                ],
+                "summary": "Authorize an app to get the user data",
+                "operationId": "oauth-authorize",
+                "parameters": [
+                    {
+                        "description": "Authorize app to get user's data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/validators.OauthAuthorizeData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/oauth/login": {
+            "post": {
+                "description": "logs an user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Oauth"
+                ],
+                "summary": "Login an user and retrieve auth token",
+                "operationId": "oauth-login",
+                "parameters": [
+                    {
+                        "description": "Logs an user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/validators.Credentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.TokensSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/token": {
+            "post": {
+                "description": "Retrieves access token form the authorization one",
+                "consumes": [
+                    "application/x-www-form-urlencoded",
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Oauth"
+                ],
+                "summary": "Retrieves access token form the authorization one",
+                "operationId": "oauth-token",
+                "parameters": [
+                    {
+                        "description": "Token exchange data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/validators.OauthExchangeToken"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.TokensSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "ping the system to healthcare purposes",
@@ -356,7 +483,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/validators.AppCreateData"
+                            "$ref": "#/definitions/validators.UserUpdateData"
                         }
                     }
                 ],
@@ -520,12 +647,21 @@ var doc = `{
         "serializers.TokensSerializer": {
             "type": "object",
             "properties": {
-                "data": {
-                    "$ref": "#/definitions/serializers.tokenDataSerializer"
-                },
-                "type": {
+                "access_token": {
                     "type": "string",
-                    "example": "tokens"
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf"
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
                 }
             }
         },
@@ -538,19 +674,6 @@ var doc = `{
                 "type": {
                     "type": "string",
                     "example": "user"
-                }
-            }
-        },
-        "serializers.tokenDataSerializer": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf"
                 }
             }
         },
@@ -580,31 +703,6 @@ var doc = `{
                 "uuid": {
                     "type": "string",
                     "example": "4722679b-5a48-4e85-9084-605e8df610f4"
-                }
-            }
-        },
-        "validators.AppCreateData": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "icon_url": {
-                    "type": "string",
-                    "example": "http://youriconurl.dev"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "MySuperApp"
-                },
-                "redirect_urls": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "http://yourredirecturl.dev"
-                    ]
                 }
             }
         },
@@ -639,6 +737,69 @@ var doc = `{
                 "password": {
                     "type": "string",
                     "example": "My@appPassw0rd"
+                }
+            }
+        },
+        "validators.OauthAuthorizeData": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "redirect_uri",
+                "scopes"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "string",
+                    "example": "4722679b-5a48-4e85-9084-605e8df610f4"
+                },
+                "redirect_uri": {
+                    "type": "string",
+                    "example": "http://yourredirecturl.dev"
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "user:read"
+                    ]
+                },
+                "state": {
+                    "type": "string",
+                    "example": "iuywerghiuhg3487"
+                }
+            }
+        },
+        "validators.OauthExchangeToken": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "client_secret",
+                "code",
+                "grant_type",
+                "redirect_uri"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "string",
+                    "example": "4722679b-5a48-4e85-9084-605e8df610f4"
+                },
+                "client_secret": {
+                    "type": "string",
+                    "example": "3i4u5h234ui5234bniuoo4i55543oi5jhio"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "iwuqebgrfweiur4"
+                },
+                "grant_type": {
+                    "type": "string",
+                    "example": "authorization_code"
+                },
+                "redirect_uri": {
+                    "type": "string",
+                    "example": "http://callback"
                 }
             }
         },
@@ -689,17 +850,32 @@ var doc = `{
                     "example": "johndoe@example.com"
                 }
             }
+        },
+        "validators.UserUpdateData": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "My@appPassw0rd"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+34666123456"
+                }
+            }
         }
     },
     "securityDefinitions": {
-        "OAuth2Password": {
+        "OAuth2AccessCode": {
             "type": "oauth2",
-            "flow": "password",
-            "tokenUrl": "https://localhost:9100/auth/login",
+            "flow": "accessCode",
+            "authorizationUrl": "https://localhost:9100/oauth/login",
+            "tokenUrl": "https://localhost:9100/oauth/token",
             "scopes": {
-                "admin": " Grants read and write access to administrative information",
-                "read": " Grants read access",
-                "write": " Grants write access"
+                "app:read": " Grants access to read apps",
+                "user:me:delete": " Grants access to delete self user",
+                "user:me:read": " Grants access to read self user",
+                "user:me:write": " Grants access to write self user"
             }
         }
     },
