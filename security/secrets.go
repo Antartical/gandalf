@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-?@#!="
+const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
 
 // Interface for secrets generator
 type ISecretGenerator interface {

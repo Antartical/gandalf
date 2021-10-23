@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gandalf/bindings"
 	"gandalf/connections"
+	"gandalf/models"
 	"gandalf/services"
 	"gandalf/validators"
 	"os"
@@ -68,6 +69,44 @@ func main() {
 
 			userService.Verificate(user)
 			fmt.Printf("User %s created successfully\n", user.Name)
+		})
+
+		// configure info command
+	commando.
+		Register("create-app").
+		SetShortDescription("Creates a new app into gandalf database").
+		SetDescription("Insert the given app into the gandalf database").                                                                             // required
+		AddFlag("name,n", "app name", commando.String, "MyNewApp").                                                                                   // required
+		AddFlag("iconurl,ic", "icon url", commando.String, "https://www.vhv.rs/dpng/d/409-4097341_penguin-png-pic-penguins-png-transparent-png.png"). // required
+		AddFlag("redirecturl,r", "redirect url", commando.String, nil).                                                                               // required                                                // required
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			url, err := flags["redirecturl"].GetString()
+			data := map[string]interface{}{
+				"name":          flags["name"].Value,
+				"icon_url":      flags["iconurl"].Value,
+				"redirect_urls": []string{url},
+			}
+			var input validators.AppCreateData
+			if err := mapstructure.Decode(data, &input); err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+
+			db := connections.NewGormPostgresConnection().Connect()
+			appService := services.NewAppService(db)
+			var user *models.User
+			db.First(&user)
+			if user == nil {
+				fmt.Print("You need to create an user first\n")
+				os.Exit(1)
+			}
+			app, err := appService.Create(input, *user)
+			if err != nil {
+				fmt.Print(err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("Client ID: %s\nClient secret: %s\n", app.ClientID, app.ClientSecret)
 		})
 
 	// parse command-line arguments
