@@ -18,6 +18,7 @@ func RegisterMeRoutes(
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
 	authService services.IAuthService,
 	userService services.IUserService,
+	appService services.IAppService,
 	pelipperService services.IPelipperService,
 ) {
 	controller := MeController{
@@ -25,6 +26,7 @@ func RegisterMeRoutes(
 		userService:     userService,
 		pelipperService: pelipperService,
 		authMiddleware:  authBearerMiddleware,
+		appService:      appService,
 	}
 
 	verifyRoutes := router.Group("/me")
@@ -64,6 +66,15 @@ func RegisterMeRoutes(
 
 		changePasswordRoutes.POST("/reset-password", controller.ResetMyPassword)
 	}
+
+	readAppsRoutes := router.Group("/me")
+	{
+		scopes := []string{security.ScopeAppRead}
+		readAppsRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+
+		readAppsRoutes.GET("/apps", controller.GetMyApps)
+		readAppsRoutes.GET("/connected-apps", controller.GetMyConnectedApps)
+	}
 }
 
 // Controller for /me endpoints
@@ -71,6 +82,7 @@ type MeController struct {
 	authService     services.IAuthService
 	userService     services.IUserService
 	pelipperService services.IPelipperService
+	appService      services.IAppService
 	authMiddleware  middlewares.IAuthBearerMiddleware
 }
 
@@ -172,6 +184,54 @@ func (controller MeController) ResetMyPassword(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-func (controller MeController) GetMyApps(c *gin.Context) {}
+// @Summary Get user's created apps
+// @Description Get user's created apps
+// @ID me-apps
+// @Tags Me
+// @Accept json
+// @Produce json
+// @Param page query int false "cursor's page"
+// @Param limit query int false "cursor's limit"
+// @Success 200 {object} serializers.PaginatedAppsSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Failure 403 {object} helpers.HTTPError
+// @Router /me/apps [get]
+func (controller MeController) GetMyApps(c *gin.Context) {
+	var input validators.PaginationQuery
+	if err := c.ShouldBindQuery(&input); err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
 
-func (controller MeController) GetMyConnectedApps(c *gin.Context) {}
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	cursor := helpers.NewCursor(input.Page, input.PageSize)
+	apps := controller.appService.ListApps(*user, &cursor)
+
+	c.JSON(http.StatusNoContent, serializers.NewPaginatedAppsSerializer(apps, cursor))
+}
+
+// @Summary Get user's connected apps
+// @Description Get user's connected apps
+// @ID me-connected-apps
+// @Tags Me
+// @Accept json
+// @Produce json
+// @Param page query int false "cursor's page"
+// @Param limit query int false "cursor's limit"
+// @Success 200 {object} serializers.PaginatedAppsPublicSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Failure 403 {object} helpers.HTTPError
+// @Router /me/connected-apps [get]
+func (controller MeController) GetMyConnectedApps(c *gin.Context) {
+	var input validators.PaginationQuery
+	if err := c.ShouldBindQuery(&input); err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := controller.authMiddleware.GetAuthorizedUser(c)
+	cursor := helpers.NewCursor(input.Page, input.PageSize)
+	apps := controller.appService.ListConnectedApps(*user, &cursor)
+
+	c.JSON(http.StatusNoContent, serializers.NewPaginatedAppsPublicSerializer(apps, cursor))
+}

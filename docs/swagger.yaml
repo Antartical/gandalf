@@ -22,6 +22,38 @@ definitions:
         example: app
         type: string
     type: object
+  serializers.CursorSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.cursorDataSerializer'
+      type:
+        example: cursor
+        type: string
+    type: object
+  serializers.PaginatedAppsPublicSerializer:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/serializers.appPublicDataSerializer'
+        type: array
+      meta:
+        $ref: '#/definitions/serializers.paginatedAppsSerializerMeta'
+      type:
+        example: app
+        type: string
+    type: object
+  serializers.PaginatedAppsSerializer:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/serializers.appDataSerializer'
+        type: array
+      meta:
+        $ref: '#/definitions/serializers.paginatedAppsSerializerMeta'
+      type:
+        example: app
+        type: string
+    type: object
   serializers.TokensSerializer:
     properties:
       access_token:
@@ -68,6 +100,44 @@ definitions:
       uuid:
         example: 4722679b-5a48-4e85-9084-605e8df610f4
         type: string
+    type: object
+  serializers.appPublicDataSerializer:
+    properties:
+      icon_url:
+        example: https://rb.gy/1akgfo
+        type: string
+      name:
+        example: MyApp
+        type: string
+      uuid:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+    type: object
+  serializers.cursorDataSerializer:
+    properties:
+      actual:
+        example: 4
+        type: integer
+      next:
+        example: 6
+        type: integer
+      previous:
+        example: 5
+        type: integer
+      size:
+        example: 5
+        type: integer
+      total_objects:
+        example: 100
+        type: integer
+      total_pages:
+        example: 20
+        type: integer
+    type: object
+  serializers.paginatedAppsSerializerMeta:
+    properties:
+      cursor:
+        $ref: '#/definitions/serializers.CursorSerializer'
     type: object
   serializers.userDataSerializer:
     properties:
@@ -420,6 +490,72 @@ paths:
           schema:
             $ref: '#/definitions/helpers.HTTPError'
       summary: Update me
+      tags:
+      - Me
+  /me/apps:
+    get:
+      consumes:
+      - application/json
+      description: Get user's created apps
+      operationId: me-apps
+      parameters:
+      - description: cursor's page
+        in: query
+        name: page
+        type: integer
+      - description: cursor's limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.PaginatedAppsSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Get user's created apps
+      tags:
+      - Me
+  /me/connected-apps:
+    get:
+      consumes:
+      - application/json
+      description: Get user's connected apps
+      operationId: me-connected-apps
+      parameters:
+      - description: cursor's page
+        in: query
+        name: page
+        type: integer
+      - description: cursor's limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.PaginatedAppsPublicSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Get user's connected apps
       tags:
       - Me
   /me/reset-password:

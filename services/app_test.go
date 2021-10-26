@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/helpers"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
@@ -217,7 +218,8 @@ func TestAppServiceListApps(t *testing.T) {
 		app := tests.AppFactory()
 		db.Create(&app)
 
-		assert.Equal(app.ID, service.ListApps(app.User, 0, 30)[0].ID)
+		cursor := helpers.NewCursor(0, 30)
+		assert.Equal(app.ID, service.ListApps(app.User, &cursor)[0].ID)
 		db.Delete(&app)
 	})
 
@@ -233,7 +235,8 @@ func TestAppServiceListConnectedApps(t *testing.T) {
 		db.Create(&app)
 		db.Model(&app).Association("ConnectedUsers").Append(&app.User)
 
-		assert.Equal(app.ID, service.ListConnectedApps(app.User, 0, 30)[0].ID)
+		cursor := helpers.NewCursor(0, 30)
+		assert.Equal(app.ID, service.ListConnectedApps(app.User, &cursor)[0].ID)
 		db.Delete(&app)
 	})
 

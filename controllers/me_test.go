@@ -22,12 +22,14 @@ func setupMeRouter(
 	authBearerMiddleware middlewares.IAuthBearerMiddleware,
 	authService services.IAuthService,
 	userService services.IUserService,
+	appService services.IAppService,
 	pelipperService services.IPelipperService,
 ) *gin.Engine {
 	router := gin.Default()
 	RegisterMeRoutes(
 		router, authBearerMiddleware,
-		authService, userService, pelipperService,
+		authService, userService,
+		appService, pelipperService,
 	)
 	return router
 }
@@ -38,11 +40,14 @@ func TestReadMe(t *testing.T) {
 	t.Run("Test Me", func(t *testing.T) {
 		authorizedUser := tests.UserFactory()
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService,
+			&appService,
+			newPelipperServiceMock(),
 		)
 		var response gin.H
 
@@ -62,11 +67,13 @@ func TestUpdateMe(t *testing.T) {
 	t.Run("Test update me successfully", func(t *testing.T) {
 		authorizedUser := tests.UserFactory()
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
+			&appService,
 			newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -96,11 +103,13 @@ func TestUpdateMe(t *testing.T) {
 	t.Run("Test update me wrong payload", func(t *testing.T) {
 		authorizedUser := tests.UserFactory()
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
+			&appService,
 			newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -123,12 +132,14 @@ func TestUpdateMe(t *testing.T) {
 	t.Run("Test update me db error", func(t *testing.T) {
 		expectedError := errors.New("Whoops!")
 		authorizedUser := tests.UserFactory()
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, expectedError, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
+			&appService,
 			newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -158,12 +169,13 @@ func TestDeleteMe(t *testing.T) {
 
 	t.Run("Test Delete me successfully", func(t *testing.T) {
 		authorizedUser := tests.UserFactory()
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService, &appService, newPelipperServiceMock(),
 		)
 		var response gin.H
 
@@ -179,12 +191,13 @@ func TestDeleteMe(t *testing.T) {
 	t.Run("Test Delete db error", func(t *testing.T) {
 		expectedError := errors.New("Whoops!")
 		authorizedUser := tests.UserFactory()
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, expectedError, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService, &appService, newPelipperServiceMock(),
 		)
 		var response gin.H
 
@@ -204,12 +217,13 @@ func TestVerificateMe(t *testing.T) {
 	t.Run("Test verificate me successfully", func(t *testing.T) {
 		authorizedUser := tests.UserFactory()
 		expectedScopes := []string{security.ScopeUserVerify}
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService, &appService, newPelipperServiceMock(),
 		)
 
 		recorder := httptest.NewRecorder()
@@ -229,6 +243,7 @@ func TestResetMyPassword(t *testing.T) {
 
 	t.Run("Test reset my password successfully", func(t *testing.T) {
 		password := "testestestestest"
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		authorizedUser := tests.UserFactory()
 		payload, _ := json.Marshal(map[string]string{
 			"password": password,
@@ -239,7 +254,7 @@ func TestResetMyPassword(t *testing.T) {
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService, &appService, newPelipperServiceMock(),
 		)
 
 		recorder := httptest.NewRecorder()
@@ -256,6 +271,7 @@ func TestResetMyPassword(t *testing.T) {
 	t.Run("Test reset my password wrong payload", func(t *testing.T) {
 		password := "testestestestest"
 		authorizedUser := tests.UserFactory()
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
 		payload, _ := json.Marshal(map[string]string{
 			"wrong": password,
 		})
@@ -264,7 +280,9 @@ func TestResetMyPassword(t *testing.T) {
 		router := setupMeRouter(
 			authMiddleware,
 			newMockedAuthService(nil, nil, nil, nil, nil, nil),
-			&userService, newPelipperServiceMock(),
+			&userService,
+			&appService,
+			newPelipperServiceMock(),
 		)
 
 		recorder := httptest.NewRecorder()

@@ -300,6 +300,106 @@
                 }
             }
         },
+        "/me/apps": {
+            "get": {
+                "description": "Get user's created apps",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Me"
+                ],
+                "summary": "Get user's created apps",
+                "operationId": "me-apps",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "cursor's page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor's limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.PaginatedAppsSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/connected-apps": {
+            "get": {
+                "description": "Get user's connected apps",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Me"
+                ],
+                "summary": "Get user's connected apps",
+                "operationId": "me-connected-apps",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "cursor's page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor's limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.PaginatedAppsPublicSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/me/reset-password": {
             "post": {
                 "description": "Reset my password",
@@ -733,6 +833,54 @@
                 }
             }
         },
+        "serializers.CursorSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/serializers.cursorDataSerializer"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "cursor"
+                }
+            }
+        },
+        "serializers.PaginatedAppsPublicSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/serializers.appPublicDataSerializer"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/serializers.paginatedAppsSerializerMeta"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "app"
+                }
+            }
+        },
+        "serializers.PaginatedAppsSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/serializers.appDataSerializer"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/serializers.paginatedAppsSerializerMeta"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "app"
+                }
+            }
+        },
         "serializers.TokensSerializer": {
             "type": "object",
             "properties": {
@@ -797,6 +945,60 @@
                 "uuid": {
                     "type": "string",
                     "example": "4722679b-5a48-4e85-9084-605e8df610f4"
+                }
+            }
+        },
+        "serializers.appPublicDataSerializer": {
+            "type": "object",
+            "properties": {
+                "icon_url": {
+                    "type": "string",
+                    "example": "https://rb.gy/1akgfo"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "MyApp"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "4722679b-5a48-4e85-9084-605e8df610f4"
+                }
+            }
+        },
+        "serializers.cursorDataSerializer": {
+            "type": "object",
+            "properties": {
+                "actual": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "next": {
+                    "type": "integer",
+                    "example": 6
+                },
+                "previous": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "total_objects": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 20
+                }
+            }
+        },
+        "serializers.paginatedAppsSerializerMeta": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "$ref": "#/definitions/serializers.CursorSerializer"
                 }
             }
         },

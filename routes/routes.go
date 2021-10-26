@@ -36,7 +36,8 @@ func Routes(router *gin.Engine) {
 	)
 	controllers.RegisterMeRoutes(
 		router, authBearerMiddleware,
-		authService, userService, pelipperService,
+		authService, userService,
+		appService, pelipperService,
 	)
 	controllers.RegisterOauth2Routes(
 		router, authBearerMiddleware,

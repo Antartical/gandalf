@@ -1,6 +1,7 @@
 package serializers
 
 import (
+	"gandalf/helpers"
 	"gandalf/models"
 	"gandalf/tests"
 	"testing"
@@ -25,7 +26,15 @@ func TestAppSerializer(t *testing.T) {
 
 	t.Run("Test serialize batch", func(t *testing.T) {
 		apps := []models.App{tests.AppFactory(), tests.AppFactory(), tests.AppFactory()}
-		appSerializer := NewAppsSerializer(apps)
-		assert.Equal(len(appSerializer), 3)
+		cursor := helpers.NewCursor(3, 10)
+		appSerializer := NewPaginatedAppsSerializer(apps, cursor)
+		assert.Equal(len(appSerializer.Data), 3)
+	})
+
+	t.Run("Test serialize public", func(t *testing.T) {
+		apps := []models.App{tests.AppFactory()}
+		cursor := helpers.NewCursor(3, 10)
+		appSerializer := NewPaginatedAppsPublicSerializer(apps, cursor)
+		assert.Equal(len(appSerializer.Data), 1)
 	})
 }
