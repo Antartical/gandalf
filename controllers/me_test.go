@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"gandalf/middlewares"
 	"gandalf/security"
+	"gandalf/serializers"
 	"gandalf/services"
 	"gandalf/tests"
 	"net/http"
@@ -288,6 +289,108 @@ func TestResetMyPassword(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("POST", "/me/reset-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+}
+
+func TestGetMyApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test get my apps success", func(t *testing.T) {
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupMeRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
+			&userService, &appService, newPelipperServiceMock(),
+		)
+
+		var response serializers.PaginatedAppsSerializer
+		recorder := httptest.NewRecorder()
+		page := 3
+		limit := 5
+		url := fmt.Sprintf("/me/apps?page=%d&limit=%d", page, limit)
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(response.Meta.Cursor.Data.ActualPage, page)
+	})
+
+	t.Run("Test get my apps bad request", func(t *testing.T) {
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupMeRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
+			&userService, &appService, newPelipperServiceMock(),
+		)
+
+		var response serializers.PaginatedAppsSerializer
+		recorder := httptest.NewRecorder()
+		page := 3
+		limit := 10000
+		url := fmt.Sprintf("/me/apps?page=%d&limit=%d", page, limit)
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
+	})
+}
+
+func TestGetMyConnectedApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test get my apps success", func(t *testing.T) {
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupMeRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
+			&userService, &appService, newPelipperServiceMock(),
+		)
+
+		var response serializers.PaginatedAppsPublicSerializer
+		recorder := httptest.NewRecorder()
+		page := 3
+		limit := 5
+		url := fmt.Sprintf("/me/connected-apps?page=%d&limit=%d", page, limit)
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+
+		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
+		assert.Equal(response.Meta.Cursor.Data.ActualPage, page)
+	})
+
+	t.Run("Test get my apps bad request", func(t *testing.T) {
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		authorizedUser := tests.UserFactory()
+		userService := newMockedUserService(nil, nil, nil, nil, nil)
+		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
+		router := setupMeRouter(
+			authMiddleware,
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
+			&userService, &appService, newPelipperServiceMock(),
+		)
+
+		var response serializers.PaginatedAppsSerializer
+		recorder := httptest.NewRecorder()
+		page := 3
+		limit := 10000
+		url := fmt.Sprintf("/me/connected-apps?page=%d&limit=%d", page, limit)
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+		json.Unmarshal(recorder.Body.Bytes(), &response)
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
 	})

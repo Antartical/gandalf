@@ -207,7 +207,7 @@ func (controller MeController) GetMyApps(c *gin.Context) {
 	cursor := helpers.NewCursor(input.Page, input.PageSize)
 	apps := controller.appService.ListApps(*user, &cursor)
 
-	c.JSON(http.StatusNoContent, serializers.NewPaginatedAppsSerializer(apps, cursor))
+	c.JSON(http.StatusOK, serializers.NewPaginatedAppsSerializer(apps, cursor))
 }
 
 // @Summary Get user's connected apps
@@ -233,5 +233,5 @@ func (controller MeController) GetMyConnectedApps(c *gin.Context) {
 	cursor := helpers.NewCursor(input.Page, input.PageSize)
 	apps := controller.appService.ListConnectedApps(*user, &cursor)
 
-	c.JSON(http.StatusNoContent, serializers.NewPaginatedAppsPublicSerializer(apps, cursor))
+	c.JSON(http.StatusOK, serializers.NewPaginatedAppsPublicSerializer(apps, cursor))
 }

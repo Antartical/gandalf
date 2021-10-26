@@ -20,7 +20,7 @@ func TestCursorSerializer(t *testing.T) {
 		assert.Equal(pageSize, serializedCursor.Data.PageSize)
 		assert.Equal(0, serializedCursor.Data.TotalPages)
 		assert.Equal(0, serializedCursor.Data.TotalObjects)
-		assert.Zero(*serializedCursor.Data.PreviousPage)
-		assert.Zero(*serializedCursor.Data.NextPage)
+		assert.Nil(serializedCursor.Data.PreviousPage)
+		assert.Nil(serializedCursor.Data.NextPage)
 	})
 }

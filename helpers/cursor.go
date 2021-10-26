@@ -15,9 +15,11 @@ func (cursor *Cursor) Update(count int) {
 	cursor.Total = count
 	cursor.TotalPages = count / cursor.PageSize
 	if cursor.Page > 0 {
+		cursor.PreviousPage = new(int)
 		*cursor.PreviousPage = cursor.Page - 1
 	}
 	if cursor.Page < cursor.TotalPages {
+		cursor.NextPage = new(int)
 		*cursor.NextPage = cursor.Page + 1
 	}
 }
@@ -27,7 +29,7 @@ func NewCursor(page int, pageSize int) Cursor {
 	return Cursor{
 		Page:         page,
 		PageSize:     pageSize,
-		NextPage:     new(int),
-		PreviousPage: new(int),
+		NextPage:     nil,
+		PreviousPage: nil,
 	}
 }
