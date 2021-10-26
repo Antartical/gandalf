@@ -42,4 +42,9 @@ func Routes(router *gin.Engine) {
 		router, authBearerMiddleware,
 		authService, userService, appService,
 	)
+	controllers.RegisterAppRoutes(
+		router,
+		authBearerMiddleware,
+		appService,
+	)
 }

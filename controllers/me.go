@@ -76,7 +76,7 @@ type MeController struct {
 
 // @Summary Get me
 // @Description get the user who performs the request
-// @ID user-read-me
+// @ID me-read
 // @Tags Me
 // @Accept json
 // @Produce json
@@ -89,9 +89,9 @@ func (controller MeController) ReadMe(c *gin.Context) {
 	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
 }
 
-// @Summary Update user
-// @Description updates an user
-// @ID user-update
+// @Summary Update me
+// @Description update me
+// @ID me-update
 // @Tags Me
 // @Accept json
 // @Produce json
@@ -120,7 +120,7 @@ func (controller MeController) UpdateMe(c *gin.Context) {
 
 // @Summary Delete me
 // @Description deletes the user who perform the request
-// @ID user-delete-me
+// @ID me-delete
 // @Tags Me
 // @Accept json
 // @Produce json
@@ -137,9 +137,9 @@ func (controller MeController) DeleteMe(c *gin.Context) {
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
-// @Summary Verify user
-// @Description Verify an user
-// @ID user-verify
+// @Summary Verify me
+// @Description Verify me
+// @ID me-verify
 // @Tags Me
 // @Accept json
 // @Produce json
@@ -152,9 +152,9 @@ func (controller MeController) VerificateMe(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-// @Summary Reset user password
-// @Description Reset user password
-// @ID user-reset-password
+// @Summary Reset my password
+// @Description Reset my password
+// @ID me-reset-password
 // @Tags Me
 // @Accept json
 // @Produce json

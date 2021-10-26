@@ -62,7 +62,7 @@ func (controller AuthController) Login(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param user body validators.AuthTokens true "Refresh the given access token with the refresh one"
+// @Param tokens body validators.AuthTokens true "Refresh the given access token with the refresh one"
 // @Success 200 {object} serializers.TokensSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Router /auth/refresh [post]

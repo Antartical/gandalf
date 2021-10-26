@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 )
 
 func RegisterAppRoutes(
@@ -30,6 +31,14 @@ func RegisterAppRoutes(
 
 		writeRoutes.POST("", controller.CreateApp)
 	}
+
+	readRoutes := router.Group("/apps")
+	{
+		scopes := []string{security.ScopeAppReadAll}
+		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
+
+		readRoutes.GET(":uuid", controller.ReadApp)
+	}
 }
 
 // Controller for /app endpoints
@@ -41,7 +50,7 @@ type AppController struct {
 // @Summary Creates a new app
 // @Description creates an app
 // @ID app-create
-// @Tags Apps
+// @Tags App
 // @Accept json
 // @Produce json
 // @Param app body validators.AppCreateData true "Creates an app"
@@ -58,6 +67,34 @@ func (controller AppController) CreateApp(c *gin.Context) {
 
 	user := controller.authMiddleware.GetAuthorizedUser(c)
 	app, err := controller.appService.Create(input, *user)
+	if err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, serializers.NewAppSerializer(*app))
+}
+
+// @Summary Get an app
+// @Description get an app by his uuid
+// @ID app-read
+// @Tags App
+// @Accept json
+// @Produce json
+// @Param uuid path string true "App uuid"
+// @Success 200 {object} serializers.AppSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Failure 403 {object} helpers.HTTPError
+// @Router /apps/{uuid} [get]
+func (controller AppController) ReadApp(c *gin.Context) {
+	var input validators.AppReadData
+	if err := c.ShouldBindUri(&input); err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
+
+	uuid, _ := uuid.FromString(input.UUID)
+	app, err := controller.appService.Read(uuid)
 	if err != nil {
 		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return

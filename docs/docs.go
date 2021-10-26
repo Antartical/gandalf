@@ -33,7 +33,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Apps"
+                    "App"
                 ],
                 "summary": "Creates a new app",
                 "operationId": "app-create",
@@ -51,6 +51,51 @@ var doc = `{
                 "responses": {
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.AppSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/apps/{uuid}": {
+            "get": {
+                "description": "get an app by his uuid",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "App"
+                ],
+                "summary": "Get an app",
+                "operationId": "app-read",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App uuid",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/serializers.AppSerializer"
                         }
@@ -134,7 +179,7 @@ var doc = `{
                 "parameters": [
                     {
                         "description": "Refresh the given access token with the refresh one",
-                        "name": "user",
+                        "name": "tokens",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -171,7 +216,7 @@ var doc = `{
                     "Me"
                 ],
                 "summary": "Get me",
-                "operationId": "user-read-me",
+                "operationId": "me-read",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -205,7 +250,7 @@ var doc = `{
                     "Me"
                 ],
                 "summary": "Delete me",
-                "operationId": "user-delete-me",
+                "operationId": "me-delete",
                 "responses": {
                     "204": {
                         "description": ""
@@ -225,7 +270,7 @@ var doc = `{
                 }
             },
             "patch": {
-                "description": "updates an user",
+                "description": "update me",
                 "consumes": [
                     "application/json"
                 ],
@@ -235,8 +280,8 @@ var doc = `{
                 "tags": [
                     "Me"
                 ],
-                "summary": "Update user",
-                "operationId": "user-update",
+                "summary": "Update me",
+                "operationId": "me-update",
                 "parameters": [
                     {
                         "description": "Updates the user with the given data",
@@ -272,7 +317,7 @@ var doc = `{
         },
         "/me/reset-password": {
             "post": {
-                "description": "Reset user password",
+                "description": "Reset my password",
                 "consumes": [
                     "application/json"
                 ],
@@ -282,8 +327,8 @@ var doc = `{
                 "tags": [
                     "Me"
                 ],
-                "summary": "Reset user password",
-                "operationId": "user-reset-password",
+                "summary": "Reset my password",
+                "operationId": "me-reset-password",
                 "responses": {
                     "204": {
                         "description": ""
@@ -305,7 +350,7 @@ var doc = `{
         },
         "/me/verify": {
             "post": {
-                "description": "Verify an user",
+                "description": "Verify me",
                 "consumes": [
                     "application/json"
                 ],
@@ -315,8 +360,8 @@ var doc = `{
                 "tags": [
                     "Me"
                 ],
-                "summary": "Verify user",
-                "operationId": "user-verify",
+                "summary": "Verify me",
+                "operationId": "me-verify",
                 "responses": {
                     "204": {
                         "description": ""
@@ -634,8 +679,8 @@ var doc = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Get user",
-                "operationId": "user-read-uuid",
+                "summary": "Get an user",
+                "operationId": "user-read",
                 "parameters": [
                     {
                         "type": "string",

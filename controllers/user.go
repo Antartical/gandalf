@@ -37,7 +37,7 @@ func RegisterUserRoutes(
 
 	readRoutes := router.Group("/users")
 	{
-		scopes := []string{security.ScopeUserRead}
+		scopes := []string{security.ScopeUserReadAll}
 		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
 		readRoutes.GET(":uuid", controller.ReadUser)
@@ -93,9 +93,9 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
 }
 
-// @Summary Get user
+// @Summary Get an user
 // @Description get an user by his uuid
-// @ID user-read-uuid
+// @ID user-read
 // @Tags User
 // @Accept json
 // @Produce json

@@ -258,7 +258,37 @@ paths:
             $ref: '#/definitions/helpers.HTTPError'
       summary: Creates a new app
       tags:
-      - Apps
+      - App
+  /apps/{uuid}:
+    get:
+      consumes:
+      - application/json
+      description: get an app by his uuid
+      operationId: app-read
+      parameters:
+      - description: App uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.AppSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Get an app
+      tags:
+      - App
   /auth/login:
     post:
       consumes:
@@ -299,7 +329,7 @@ paths:
       parameters:
       - description: Refresh the given access token with the refresh one
         in: body
-        name: user
+        name: tokens
         required: true
         schema:
           $ref: '#/definitions/validators.AuthTokens'
@@ -322,7 +352,7 @@ paths:
       consumes:
       - application/json
       description: deletes the user who perform the request
-      operationId: user-delete-me
+      operationId: me-delete
       produces:
       - application/json
       responses:
@@ -343,7 +373,7 @@ paths:
       consumes:
       - application/json
       description: get the user who performs the request
-      operationId: user-read-me
+      operationId: me-read
       produces:
       - application/json
       responses:
@@ -365,8 +395,8 @@ paths:
     patch:
       consumes:
       - application/json
-      description: updates an user
-      operationId: user-update
+      description: update me
+      operationId: me-update
       parameters:
       - description: Updates the user with the given data
         in: body
@@ -389,15 +419,15 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Update user
+      summary: Update me
       tags:
       - Me
   /me/reset-password:
     post:
       consumes:
       - application/json
-      description: Reset user password
-      operationId: user-reset-password
+      description: Reset my password
+      operationId: me-reset-password
       produces:
       - application/json
       responses:
@@ -411,15 +441,15 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Reset user password
+      summary: Reset my password
       tags:
       - Me
   /me/verify:
     post:
       consumes:
       - application/json
-      description: Verify an user
-      operationId: user-verify
+      description: Verify me
+      operationId: me-verify
       produces:
       - application/json
       responses:
@@ -433,7 +463,7 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Verify user
+      summary: Verify me
       tags:
       - Me
   /notifications/emails/reset-password:
@@ -630,7 +660,7 @@ paths:
       consumes:
       - application/json
       description: get an user by his uuid
-      operationId: user-read-uuid
+      operationId: user-read
       parameters:
       - description: User uuid
         in: path
@@ -652,7 +682,7 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Get user
+      summary: Get an user
       tags:
       - User
 securityDefinitions:
