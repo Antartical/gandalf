@@ -40,7 +40,7 @@ func RegisterOauth2Routes(
 		scopes := []string{security.ScopeUserAuthorizeApp}
 		authorizeRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
-		authorizeRoutes.POST("/authorize")
+		authorizeRoutes.POST("/authorize", controller.Oauth2Authorize)
 	}
 }
 
@@ -103,9 +103,13 @@ func (controller Oauth2Controller) Oauth2Authorize(c *gin.Context) {
 		return
 	}
 
-	controller.authService.Authorize(app, user, input)
+	code, err := controller.authService.Authorize(app, user, input)
+	if err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
 
-	redirectUrl := fmt.Sprintf("%s?code=%s&state=%s", input.RedirectURI, "", input.State)
+	redirectUrl := fmt.Sprintf("%s?code=%s&state=%s", input.RedirectURI, code, input.State)
 	c.Redirect(http.StatusFound, redirectUrl)
 }
 

@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"syreclabs.com/go/faker"
 )
 
 type authenticateRecorder struct {
@@ -42,9 +43,11 @@ type mockAuthService struct {
 	getAuthorizedUserRecorder *getAuthorizedUserRecorder
 	refreshTokenRecorder      *refreshTokenRecorder
 
-	authenticateError      error
-	getAuthorizedUserError error
-	refreshTokenError      error
+	authenticateError       error
+	getAuthorizedUserError  error
+	refreshTokenError       error
+	authorizeAppError       error
+	exchangeOauthTokenError error
 
 	returnedUser *models.User
 }
@@ -54,6 +57,8 @@ func newMockedAuthService(
 	authenticateError error,
 	getAuthorizedUserError error,
 	refreshTokenError error,
+	authorizeAppError error,
+	exchangeOauthTokenError error,
 ) *mockAuthService {
 	return &mockAuthService{
 		authenticateRecorder:      new(authenticateRecorder),
@@ -64,6 +69,8 @@ func newMockedAuthService(
 		getAuthorizedUserError:    getAuthorizedUserError,
 		refreshTokenError:         refreshTokenError,
 		returnedUser:              returnedUser,
+		authorizeAppError:         authorizeAppError,
+		exchangeOauthTokenError:   exchangeOauthTokenError,
 	}
 }
 
@@ -73,7 +80,7 @@ func (service *mockAuthService) Authenticate(credentials validators.Credentials,
 }
 
 func (service *mockAuthService) Authorize(app *models.App, user *models.User, data validators.OauthAuthorizeData) (string, error) {
-	return "", nil
+	return faker.RandomString(10), service.authorizeAppError
 }
 
 func (service *mockAuthService) GenerateTokens(user models.User, scopes []string) services.AuthTokens {
@@ -95,7 +102,7 @@ func (service *mockAuthService) RefreshToken(accessToken string, refreshToken st
 }
 
 func (service *mockAuthService) ExchangeOauthToken(app models.App, data validators.OauthExchangeToken) (*services.AuthTokens, error) {
-	return nil, nil
+	return &services.AuthTokens{AccessToken: "", RefreshToken: ""}, service.exchangeOauthTokenError
 }
 
 func setupAuthRouter(authService services.IAuthService) *gin.Engine {
@@ -110,7 +117,7 @@ func TestLogin(t *testing.T) {
 	t.Run("Test login successfully", func(t *testing.T) {
 		user := tests.UserFactory()
 		expectedScopes := security.GroupUserSelf
-		authService := newMockedAuthService(&user, nil, nil, nil)
+		authService := newMockedAuthService(&user, nil, nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		var response gin.H
 
@@ -133,7 +140,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("Test login wrong payload", func(t *testing.T) {
 		user := tests.UserFactory()
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 
 		payload, _ := json.Marshal(map[string]string{
@@ -150,7 +157,7 @@ func TestLogin(t *testing.T) {
 	t.Run("Test login forbidden user", func(t *testing.T) {
 		raisedError := errors.New("wrong")
 		user := tests.UserFactory()
-		authService := newMockedAuthService(nil, raisedError, nil, nil)
+		authService := newMockedAuthService(nil, raisedError, nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 
 		payload, _ := json.Marshal(map[string]interface{}{
@@ -170,7 +177,7 @@ func TestRefresh(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test refresh token succesfully", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		accessToken := "testaccess"
 		refreshToken := "testrefresh"
@@ -192,7 +199,7 @@ func TestRefresh(t *testing.T) {
 	})
 
 	t.Run("Test refresh token wrong payload", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		router := setupAuthRouter(authService)
 		accessToken := "testaccess"
 
@@ -209,7 +216,7 @@ func TestRefresh(t *testing.T) {
 
 	t.Run("Test refresh token unrelated tokens", func(t *testing.T) {
 		raisedError := errors.New("wrong")
-		authService := newMockedAuthService(nil, nil, nil, raisedError)
+		authService := newMockedAuthService(nil, nil, nil, raisedError, nil, nil)
 		router := setupAuthRouter(authService)
 		accessToken := "testaccess"
 		refreshToken := "testrefresh"

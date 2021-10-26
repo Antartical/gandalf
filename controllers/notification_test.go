@@ -30,7 +30,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test resend verification email successfully", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(
@@ -54,7 +54,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 	})
 
 	t.Run("Test resend verification email wrong payload", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(
@@ -76,7 +76,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 	})
 
 	t.Run("Test resend verification email not registered", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(
@@ -103,7 +103,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 	assert := require.New(t)
 
 	t.Run("Test resend change password email successfully", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(
@@ -127,7 +127,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 	})
 
 	t.Run("Test resend change password email wrong payload", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(
@@ -149,7 +149,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 	})
 
 	t.Run("Test resend change password email not registered", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
+		authService := newMockedAuthService(nil, nil, nil, nil, nil, nil)
 		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
 		pelipperService := newPelipperServiceMock()
 		router := setupNotificationRouter(

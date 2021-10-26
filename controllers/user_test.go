@@ -194,7 +194,7 @@ func TestCreateUser(t *testing.T) {
 		pelipperService := newPelipperServiceMock()
 		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
 		router := setupUserRouter(
-			authBearerMiddleware, newMockedAuthService(nil, nil, nil, nil),
+			authBearerMiddleware, newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, pelipperService,
 		)
 		var response gin.H
@@ -235,7 +235,7 @@ func TestCreateUser(t *testing.T) {
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		router := setupUserRouter(
 			newMockAuthBearerMiddleware(nil),
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -257,7 +257,7 @@ func TestCreateUser(t *testing.T) {
 		userService := newMockedUserService(expectedError, nil, nil, nil, nil)
 		router := setupUserRouter(
 			newMockAuthBearerMiddleware(nil),
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -294,7 +294,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -328,7 +328,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -356,7 +356,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -392,7 +392,7 @@ func TestVerificateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -417,7 +417,7 @@ func TestMe(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -446,7 +446,7 @@ func TestResetUserPassword(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -471,7 +471,7 @@ func TestResetUserPassword(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -492,7 +492,7 @@ func TestDelete(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -513,7 +513,7 @@ func TestDelete(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -537,7 +537,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -557,7 +557,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -578,7 +578,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H

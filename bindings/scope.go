@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gandalf/security"
+	"strings"
 )
 
 // Not found scope error
@@ -30,7 +31,7 @@ type Scope string
 
 // Implement Unmarshaler interface
 func (scope *Scope) UnmarshalJSON(b []byte) error {
-	*scope = Scope(b)
+	*scope = Scope(strings.Replace(string(b), "\"", "", -1))
 	if !validScopes[scope.ToString()] {
 		return ScopeNotFoundError{
 			Scope: scope.ToString(),
@@ -46,7 +47,7 @@ func (scope Scope) MarshalJSON() ([]byte, error) {
 
 // To string
 func (scope Scope) ToString() string {
-	return fmt.Sprintf("%s", scope)
+	return strings.ToLower(string(scope))
 }
 
 // Convert Scope array to String array
