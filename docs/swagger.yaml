@@ -16,10 +16,17 @@ definitions:
     type: object
   serializers.TokensSerializer:
     properties:
-      data:
-        $ref: '#/definitions/serializers.tokenDataSerializer'
-      type:
-        example: tokens
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      refresh_token:
+        example: kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf
+        type: string
+      token_type:
+        example: Bearer
         type: string
     type: object
   serializers.UserSerializer:
@@ -28,15 +35,6 @@ definitions:
         $ref: '#/definitions/serializers.userDataSerializer'
       type:
         example: user
-        type: string
-    type: object
-  serializers.tokenDataSerializer:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-        type: string
-      refresh_token:
-        example: kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf
         type: string
     type: object
   serializers.userDataSerializer:
@@ -83,6 +81,52 @@ definitions:
     required:
     - email
     - password
+    type: object
+  validators.OauthAuthorizeData:
+    properties:
+      client_id:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+      redirect_uri:
+        example: http://yourredirecturl.dev
+        type: string
+      scopes:
+        example:
+        - user:read
+        items:
+          type: string
+        type: array
+      state:
+        example: iuywerghiuhg3487
+        type: string
+    required:
+    - client_id
+    - redirect_uri
+    - scopes
+    type: object
+  validators.OauthExchangeToken:
+    properties:
+      client_id:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+      client_secret:
+        example: 3i4u5h234ui5234bniuoo4i55543oi5jhio
+        type: string
+      code:
+        example: iwuqebgrfweiur4
+        type: string
+      grant_type:
+        example: authorization_code
+        type: string
+      redirect_uri:
+        example: http://callback
+        type: string
+    required:
+    - client_id
+    - client_secret
+    - code
+    - grant_type
+    - redirect_uri
     type: object
   validators.UserCreateData:
     properties:
@@ -163,7 +207,7 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Login
+      summary: Login admin
       tags:
       - Auth
   /auth/refresh:
@@ -193,6 +237,148 @@ paths:
       summary: Refresh
       tags:
       - Auth
+  /notifications/emails/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends reset password email
+      operationId: notifications-emails-reset-password
+      parameters:
+      - description: resend the reset password email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Sends reset password email
+      tags:
+      - Notification
+  /notifications/emails/verify:
+    post:
+      consumes:
+      - application/json
+      description: Sends verification email
+      operationId: notifications-emails-verification
+      parameters:
+      - description: sends the verification email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserResendEmail'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Sends verification email
+      tags:
+      - Notification
+  /oauth/authorize:
+    post:
+      consumes:
+      - application/json
+      description: authorize app
+      operationId: oauth-authorize
+      parameters:
+      - description: Authorize app to get user's data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.OauthAuthorizeData'
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: ""
+      summary: Authorize an app to get the user data
+      tags:
+      - Oauth
+  /oauth/login:
+    post:
+      consumes:
+      - application/json
+      description: logs an user
+      operationId: oauth-login
+      parameters:
+      - description: Logs an user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.Credentials'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializers.TokensSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Login an user and retrieve auth token
+      tags:
+      - Oauth
+  /oauth/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      - application/json
+      description: Retrieves access token form the authorization one
+      operationId: oauth-token
+      parameters:
+      - description: Token exchange data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.OauthExchangeToken'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializers.TokensSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      summary: Retrieves access token form the authorization one
+      tags:
+      - Oauth
   /ping:
     get:
       consumes:
@@ -270,64 +456,6 @@ paths:
       summary: Get user
       tags:
       - User
-  /users/email/reset-password/resend:
-    post:
-      consumes:
-      - application/json
-      description: Resend reset password email
-      operationId: user-resend-reset-password-email
-      parameters:
-      - description: resend the reset password email
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/validators.UserResendEmail'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Resend reset password email
-      tags:
-      - Notification
-  /users/email/verify/resend:
-    post:
-      consumes:
-      - application/json
-      description: Resend verification email
-      operationId: user-resend-verification-email
-      parameters:
-      - description: resen the verification email
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/validators.UserResendEmail'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Resend verification email
-      tags:
-      - Notification
   /users/me:
     delete:
       consumes:
@@ -448,13 +576,15 @@ paths:
       tags:
       - User
 securityDefinitions:
-  OAuth2Password:
-    flow: password
+  OAuth2AccessCode:
+    authorizationUrl: https://localhost:9100/oauth/login
+    flow: accessCode
     scopes:
-      admin: ' Grants read and write access to administrative information'
-      read: ' Grants read access'
-      write: ' Grants write access'
-    tokenUrl: https://localhost:9100/auth/login
+      app:read: ' Grants access to read apps'
+      user:me:delete: ' Grants access to delete self user'
+      user:me:read: ' Grants access to read self user'
+      user:me:write: ' Grants access to write self user'
+    tokenUrl: https://localhost:9100/oauth/token
     type: oauth2
 swagger: "2.0"
 x-extension-openapi:

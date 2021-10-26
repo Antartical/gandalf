@@ -34,8 +34,12 @@ func newAuthServiceMock(userGetAuthorizedUser *models.User, errorGetAuthorizedUs
 	}
 }
 
-func (service authServiceMock) Authenticate(credentials validators.Credentials) (*models.User, error) {
+func (service authServiceMock) Authenticate(credentials validators.Credentials, isStaff bool) (*models.User, error) {
 	return nil, nil
+}
+
+func (service *authServiceMock) Authorize(app *models.App, user *models.User, data validators.OauthAuthorizeData) (string, error) {
+	return "", nil
 }
 
 func (service *authServiceMock) GenerateTokens(user models.User, scopes []string) services.AuthTokens {
@@ -49,6 +53,10 @@ func (service authServiceMock) GetAuthorizedUser(accessToken string, scopes []st
 }
 
 func (service authServiceMock) RefreshToken(accessToken string, refreshToken string) (*services.AuthTokens, error) {
+	return nil, nil
+}
+
+func (service authServiceMock) ExchangeOauthToken(app models.App, data validators.OauthExchangeToken) (*services.AuthTokens, error) {
 	return nil, nil
 }
 

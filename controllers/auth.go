@@ -29,7 +29,7 @@ type AuthController struct {
 	authService services.IAuthService
 }
 
-// @Summary Login
+// @Summary Login admin
 // @Description Logs an user into the system
 // @ID auth-login
 // @Tags Auth
@@ -46,13 +46,13 @@ func (controller AuthController) Login(c *gin.Context) {
 		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}
-	user, err := controller.authService.Authenticate(input)
+	user, err := controller.authService.Authenticate(input, false)
 	if err != nil {
 		helpers.AbortWithStatus(c, http.StatusForbidden, err)
 		return
 	}
 
-	tokens := controller.authService.GenerateTokens(*user, security.GroupUserAll)
+	tokens := controller.authService.GenerateTokens(*user, security.GroupUserSelf)
 	c.JSON(http.StatusOK, serializers.NewTokensSerializer(tokens))
 }
 

@@ -33,8 +33,6 @@ func RegisterUserRoutes(
 	publicRoutes := router.Group("/users")
 	{
 		publicRoutes.POST("", controller.CreateUser)
-		publicRoutes.POST("/email/verify/resend", controller.ResendVerificationEmail)
-		publicRoutes.POST("/email/reset-password/resend", controller.ResendResetPasswordEmail)
 	}
 
 	verifyRoutes := router.Group("/users")
@@ -248,85 +246,5 @@ func (controller UserController) ResetUserPassword(c *gin.Context) {
 		return
 	}
 	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)
-	c.JSON(http.StatusNoContent, nil)
-}
-
-// @Summary Resend verification email
-// @Description Resend verification email
-// @ID user-resend-verification-email
-// @Tags Notification
-// @Accept json
-// @Produce json
-// @Param data body validators.UserResendEmail true "resen the verification email"
-// @Success 204
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/email/verify/resend [post]
-func (controller UserController) ResendVerificationEmail(c *gin.Context) {
-	var input validators.UserResendEmail
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
-		return
-	}
-
-	user, err := controller.userService.ReadByEmail(input.Email)
-	if err != nil {
-		c.JSON(http.StatusCreated, nil)
-		return
-	}
-
-	verifyToken := controller.authService.GenerateTokens(
-		*user, []string{security.ScopeUserVerify},
-	).AccessToken
-	url := os.Getenv("EMAIL_VERIFICATION_URL")
-	emailData := validators.PelipperUserVerifyEmail{
-		Email:   user.Email,
-		Name:    user.Name,
-		Subject: "Welcome",
-		VerificationLink: fmt.Sprintf(
-			"%s?code=%s", url, verifyToken,
-		),
-	}
-	go controller.pelipperService.SendUserVerifyEmail(emailData)
-	c.JSON(http.StatusNoContent, nil)
-}
-
-// @Summary Resend reset password email
-// @Description Resend reset password email
-// @ID user-resend-reset-password-email
-// @Tags Notification
-// @Accept json
-// @Produce json
-// @Param data body validators.UserResendEmail true "resend the reset password email"
-// @Success 204
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/email/reset-password/resend [post]
-func (controller UserController) ResendResetPasswordEmail(c *gin.Context) {
-	var input validators.UserResendEmail
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
-		return
-	}
-
-	user, err := controller.userService.ReadByEmail(input.Email)
-	if err != nil {
-		c.JSON(http.StatusCreated, nil)
-		return
-	}
-
-	changePasswordToken := controller.authService.GenerateTokens(
-		*user, []string{security.ScopeUserChangePassword},
-	).AccessToken
-	url := os.Getenv("PASSWORD_CHANGE_URL")
-	emailData := validators.PelipperUserChangePassword{
-		Email:   user.Email,
-		Name:    user.Name,
-		Subject: "Welcome",
-		ChangePasswordLink: fmt.Sprintf(
-			"%s?code=%s", url, changePasswordToken,
-		),
-	}
-	go controller.pelipperService.SendUserChangePasswordEmail(emailData)
 	c.JSON(http.StatusNoContent, nil)
 }

@@ -17,6 +17,7 @@ func Routes(router *gin.Engine) {
 	// Services
 	authService := services.NewAuthService(db)
 	userService := services.NewUserService(db)
+	appService := services.NewAppService(db)
 	pelipperService := services.NewPelipperService()
 
 	// Middlewares
@@ -24,9 +25,17 @@ func Routes(router *gin.Engine) {
 
 	// Routes
 	controllers.RegisterAuthRoutes(router, authService)
+	controllers.RegisterNotificationRoutes(
+		router, authService,
+		userService, pelipperService,
+	)
 	controllers.RegisterPingRoutes(router)
 	controllers.RegisterUserRoutes(
 		router, authBearerMiddleware,
 		authService, userService, pelipperService,
+	)
+	controllers.RegisterOauth2Routes(
+		router, authBearerMiddleware,
+		authService, userService, appService,
 	)
 }

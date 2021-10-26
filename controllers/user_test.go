@@ -194,7 +194,7 @@ func TestCreateUser(t *testing.T) {
 		pelipperService := newPelipperServiceMock()
 		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
 		router := setupUserRouter(
-			authBearerMiddleware, newMockedAuthService(nil, nil, nil, nil),
+			authBearerMiddleware, newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, pelipperService,
 		)
 		var response gin.H
@@ -235,7 +235,7 @@ func TestCreateUser(t *testing.T) {
 		userService := newMockedUserService(nil, nil, nil, nil, nil)
 		router := setupUserRouter(
 			newMockAuthBearerMiddleware(nil),
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -257,7 +257,7 @@ func TestCreateUser(t *testing.T) {
 		userService := newMockedUserService(expectedError, nil, nil, nil, nil)
 		router := setupUserRouter(
 			newMockAuthBearerMiddleware(nil),
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -294,7 +294,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -328,7 +328,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -356,7 +356,7 @@ func TestUpdateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService,
 			newPelipperServiceMock(),
 		)
@@ -382,89 +382,6 @@ func TestUpdateUser(t *testing.T) {
 	})
 }
 
-func TestUserResendVerificationEmail(t *testing.T) {
-	assert := require.New(t)
-
-	t.Run("Test resend verification email successfully", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, nil, nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"email": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
-		assert.Equal(userService.readByEmailRecorder.email, email)
-		assert.Equal(authService.generateTokensRecorder.user.Email, email)
-		assert.False(authBearerMiddleware.hasScopesCalled)
-		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
-	})
-
-	t.Run("Test resend verification email wrong payload", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, nil, nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"wrong": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
-	})
-
-	t.Run("Test resend verification email not registered", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"email": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/verify/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
-		assert.Equal(userService.readByEmailRecorder.email, email)
-		assert.False(authBearerMiddleware.hasScopesCalled)
-		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
-	})
-}
-
 func TestVerificateUser(t *testing.T) {
 	assert := require.New(t)
 
@@ -475,7 +392,7 @@ func TestVerificateUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -500,7 +417,7 @@ func TestMe(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -512,89 +429,6 @@ func TestMe(t *testing.T) {
 
 		assert.Equal(recorder.Result().StatusCode, http.StatusOK)
 		assert.True(authMiddleware.getAuthorizedUserCalled)
-	})
-}
-
-func TestUserResendResetPasswordEmail(t *testing.T) {
-	assert := require.New(t)
-
-	t.Run("Test resend change password email successfully", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, nil, nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"email": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusNoContent)
-		assert.Equal(userService.readByEmailRecorder.email, email)
-		assert.Equal(authService.generateTokensRecorder.user.Email, email)
-		assert.False(authBearerMiddleware.hasScopesCalled)
-		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
-	})
-
-	t.Run("Test resend change password email wrong payload", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, nil, nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"wrong": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusBadRequest)
-	})
-
-	t.Run("Test resend change password email not registered", func(t *testing.T) {
-		authService := newMockedAuthService(nil, nil, nil, nil)
-		userService := newMockedUserService(nil, errors.New("not found"), nil, nil, nil)
-		pelipperService := newPelipperServiceMock()
-		authBearerMiddleware := newMockAuthBearerMiddleware(nil)
-		router := setupUserRouter(
-			authBearerMiddleware, authService,
-			&userService, pelipperService,
-		)
-		var response gin.H
-		email := "test@test.com"
-
-		payload, _ := json.Marshal(map[string]string{
-			"email": email,
-		})
-
-		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/users/email/reset-password/resend", bytes.NewBuffer(payload))
-		router.ServeHTTP(recorder, request)
-		json.Unmarshal(recorder.Body.Bytes(), &response)
-
-		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
-		assert.Equal(userService.readByEmailRecorder.email, email)
-		assert.False(authBearerMiddleware.hasScopesCalled)
-		assert.False(authBearerMiddleware.getAuthorizedUserCalled)
 	})
 }
 
@@ -612,7 +446,7 @@ func TestResetUserPassword(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -637,7 +471,7 @@ func TestResetUserPassword(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 
@@ -658,7 +492,7 @@ func TestDelete(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -679,7 +513,7 @@ func TestDelete(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -703,7 +537,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -723,7 +557,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H
@@ -744,7 +578,7 @@ func TestReadUser(t *testing.T) {
 		authMiddleware := newMockAuthBearerMiddleware(&authorizedUser)
 		router := setupUserRouter(
 			authMiddleware,
-			newMockedAuthService(nil, nil, nil, nil),
+			newMockedAuthService(nil, nil, nil, nil, nil, nil),
 			&userService, newPelipperServiceMock(),
 		)
 		var response gin.H

@@ -4,24 +4,19 @@ import (
 	"gandalf/services"
 )
 
-type tokenDataSerializer struct {
+type TokensSerializer struct {
 	AcessToken   string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"`
 	RefreshToken string `json:"refresh_token" example:"kpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyf"`
-}
-
-// Bearer auth token serialization struct
-type TokensSerializer struct {
-	ObjectType string              `json:"type" example:"tokens"`
-	Data       tokenDataSerializer `json:"data"`
+	TokenType    string `json:"token_type" example:"Bearer"`
+	ExpiresIn    int64  `json:"expires_in" example:"3600"`
 }
 
 // Creates a new user serializer
 func NewTokensSerializer(tokens services.AuthTokens) TokensSerializer {
 	return TokensSerializer{
-		ObjectType: "tokens",
-		Data: tokenDataSerializer{
-			AcessToken:   tokens.AccessToken,
-			RefreshToken: tokens.RefreshToken,
-		},
+		AcessToken:   tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    int64(tokens.ExpiresIn),
 	}
 }
