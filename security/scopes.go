@@ -11,7 +11,8 @@ const (
 	ScopeUserWrite  = "user:me:write"
 	ScopeUserDelete = "user:me:delete"
 
-	ScopeAppRead = "app:read"
+	ScopeAppWrite = "app:me:write"
+	ScopeAppRead  = "app:me:read"
 )
 
 // Group scopes
