@@ -217,8 +217,6 @@ func TestCreateUser(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
-		t.Log(userService.createRecorder.userData.Birthday)
-
 		assert.Equal(recorder.Result().StatusCode, http.StatusCreated)
 		assert.Equal(userService.createRecorder.userData.Email, email)
 		assert.Equal(userService.createRecorder.userData.Password, password)

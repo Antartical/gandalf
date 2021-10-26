@@ -96,9 +96,8 @@ func (controller AppController) ReadApp(c *gin.Context) {
 	uuid, _ := uuid.FromString(input.UUID)
 	app, err := controller.appService.Read(uuid)
 	if err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		c.JSON(http.StatusNotFound, gin.H{})
 		return
 	}
-
-	c.JSON(http.StatusCreated, serializers.NewAppSerializer(*app))
+	c.JSON(http.StatusOK, serializers.NewAppSerializer(*app))
 }
