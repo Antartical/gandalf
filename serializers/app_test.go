@@ -1,6 +1,7 @@
 package serializers
 
 import (
+	"gandalf/models"
 	"gandalf/tests"
 	"testing"
 
@@ -20,5 +21,11 @@ func TestAppSerializer(t *testing.T) {
 		assert.Equal(app.Name, appSerializer.Data.Name)
 		assert.Equal(app.IconUrl, appSerializer.Data.IconUrl)
 		assert.Equal([]string(app.RedirectUrls), appSerializer.Data.RedirectUrls)
+	})
+
+	t.Run("Test serialize batch", func(t *testing.T) {
+		apps := []models.App{tests.AppFactory(), tests.AppFactory(), tests.AppFactory()}
+		appSerializer := NewAppsSerializer(apps)
+		assert.Equal(len(appSerializer), 3)
 	})
 }

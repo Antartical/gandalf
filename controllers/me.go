@@ -171,3 +171,7 @@ func (controller MeController) ResetMyPassword(c *gin.Context) {
 	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func (controller MeController) GetMyApps(c *gin.Context) {}
+
+func (controller MeController) GetMyConnectedApps(c *gin.Context) {}

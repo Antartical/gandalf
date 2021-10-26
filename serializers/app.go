@@ -36,3 +36,13 @@ func NewAppSerializer(app models.App) AppSerializer {
 		},
 	}
 }
+
+// Creates a new apps serializer and fills it with
+// the given user data.
+func NewAppsSerializer(apps []models.App) []AppSerializer {
+	var serializedApps []AppSerializer
+	for _, app := range apps {
+		serializedApps = append(serializedApps, NewAppSerializer(app))
+	}
+	return serializedApps
+}

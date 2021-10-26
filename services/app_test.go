@@ -206,3 +206,35 @@ func TestAppServiceDelete(t *testing.T) {
 	})
 
 }
+
+func TestAppServiceListApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test list apps", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		assert.Equal(app.ID, service.ListApps(app.User, 0, 30)[0].ID)
+		db.Delete(&app)
+	})
+
+}
+
+func TestAppServiceListConnectedApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test list apps", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+		app := tests.AppFactory()
+		db.Create(&app)
+		db.Model(&app).Association("ConnectedUsers").Append(&app.User)
+
+		assert.Equal(app.ID, service.ListConnectedApps(app.User, 0, 30)[0].ID)
+		db.Delete(&app)
+	})
+
+}

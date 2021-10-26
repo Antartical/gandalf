@@ -81,6 +81,14 @@ func (service *mockAppService) Delete(uuid uuid.UUID) error {
 	return service.deleteError
 }
 
+func (service *mockAppService) ListApps(user models.User, page int, pageSize int) []models.App {
+	return []models.App{}
+}
+
+func (service *mockAppService) ListConnectedApps(user models.User, page int, pageSize int) []models.App {
+	return []models.App{}
+}
+
 func newMockedAppService(createError error, readError error, readByClientError error, updateError error, deleteError error) mockAppService {
 	return mockAppService{
 		createAppRecorder:       new(createAppRecorder),
