@@ -86,6 +86,7 @@ func (controller Oauth2Controller) Oauth2Login(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param user body validators.OauthAuthorizeData true "Authorize app to get user's data"
+// @Security OAuth2AccessCode[user:me:authorized-app]
 // @Success 302
 // @Router /oauth/authorize [post]
 func (controller Oauth2Controller) Oauth2Authorize(c *gin.Context) {

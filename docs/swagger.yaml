@@ -326,6 +326,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:write
       summary: Creates a new app
       tags:
       - App
@@ -356,6 +359,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:all:read
       summary: Get an app
       tags:
       - App
@@ -436,6 +442,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:delete
       summary: Delete me
       tags:
       - Me
@@ -459,6 +468,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:read
       summary: Get me
       tags:
       - Me
@@ -489,6 +501,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:write
       summary: Update me
       tags:
       - Me
@@ -522,6 +537,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:read
       summary: Get user's created apps
       tags:
       - Me
@@ -555,6 +573,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:read
       summary: Get user's connected apps
       tags:
       - Me
@@ -577,6 +598,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:change-password
       summary: Reset my password
       tags:
       - Me
@@ -599,6 +623,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:verify
       summary: Verify me
       tags:
       - Me
@@ -678,6 +705,9 @@ paths:
       responses:
         "302":
           description: ""
+      security:
+      - OAuth2AccessCode:
+        - user:me:authorized-app
       summary: Authorize an app to get the user data
       tags:
       - Oauth
@@ -818,6 +848,9 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:all:read
       summary: Get an user
       tags:
       - User
@@ -826,9 +859,14 @@ securityDefinitions:
     authorizationUrl: https://localhost:9100/oauth/login
     flow: accessCode
     scopes:
-      app:read: ' Grants access to read apps'
+      app:me:read: ' Grants access to read self created apps'
+      app:me:write: ' Grants access to write self created apps'
+      user:me:authorized-app: ' Grants access an app to get information about the
+        user'
+      user:me:change-password: ' Grants access to change self password'
       user:me:delete: ' Grants access to delete self user'
       user:me:read: ' Grants access to read self user'
+      user:me:verify: ' Grants access to verify created user'
       user:me:write: ' Grants access to write self user'
     tokenUrl: https://localhost:9100/oauth/token
     type: oauth2

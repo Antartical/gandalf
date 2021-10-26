@@ -103,6 +103,7 @@ func (controller UserController) CreateUser(c *gin.Context) {
 // @Success 200 {object} serializers.UserSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:all:read]
 // @Router /users/{uuid} [get]
 func (controller UserController) ReadUser(c *gin.Context) {
 	var input validators.UserReadData

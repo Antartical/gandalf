@@ -95,6 +95,7 @@ type MeController struct {
 // @Success 200 {object} serializers.UserSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:me:read]
 // @Router /me [get]
 func (controller MeController) ReadMe(c *gin.Context) {
 	user := controller.authMiddleware.GetAuthorizedUser(c)
@@ -111,6 +112,7 @@ func (controller MeController) ReadMe(c *gin.Context) {
 // @Success 200 {object} serializers.UserSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:me:write]
 // @Router /me [patch]
 func (controller MeController) UpdateMe(c *gin.Context) {
 	user := controller.authMiddleware.GetAuthorizedUser(c)
@@ -139,6 +141,7 @@ func (controller MeController) UpdateMe(c *gin.Context) {
 // @Success 204
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:me:delete]
 // @Router /me [delete]
 func (controller MeController) DeleteMe(c *gin.Context) {
 	user := controller.authMiddleware.GetAuthorizedUser(c)
@@ -158,6 +161,7 @@ func (controller MeController) DeleteMe(c *gin.Context) {
 // @Success 204
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:me:verify]
 // @Router /me/verify [post]
 func (controller MeController) VerificateMe(c *gin.Context) {
 	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
@@ -173,6 +177,7 @@ func (controller MeController) VerificateMe(c *gin.Context) {
 // @Success 204
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:me:change-password]
 // @Router /me/reset-password [post]
 func (controller MeController) ResetMyPassword(c *gin.Context) {
 	var input validators.UserResetPasswordData
@@ -195,6 +200,7 @@ func (controller MeController) ResetMyPassword(c *gin.Context) {
 // @Success 200 {object} serializers.PaginatedAppsSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[app:me:read]
 // @Router /me/apps [get]
 func (controller MeController) GetMyApps(c *gin.Context) {
 	var input validators.PaginationQuery
@@ -221,6 +227,7 @@ func (controller MeController) GetMyApps(c *gin.Context) {
 // @Success 200 {object} serializers.PaginatedAppsPublicSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[app:me:read]
 // @Router /me/connected-apps [get]
 func (controller MeController) GetMyConnectedApps(c *gin.Context) {
 	var input validators.PaginationQuery

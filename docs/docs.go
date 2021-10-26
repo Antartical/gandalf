@@ -25,6 +25,13 @@ var doc = `{
     "paths": {
         "/apps": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "app:me:write"
+                        ]
+                    }
+                ],
                 "description": "creates an app",
                 "consumes": [
                     "application/json"
@@ -72,6 +79,13 @@ var doc = `{
         },
         "/apps/{uuid}": {
             "get": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "app:all:read"
+                        ]
+                    }
+                ],
                 "description": "get an app by his uuid",
                 "consumes": [
                     "application/json"
@@ -205,6 +219,13 @@ var doc = `{
         },
         "/me": {
             "get": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:read"
+                        ]
+                    }
+                ],
                 "description": "get the user who performs the request",
                 "consumes": [
                     "application/json"
@@ -239,6 +260,13 @@ var doc = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:delete"
+                        ]
+                    }
+                ],
                 "description": "deletes the user who perform the request",
                 "consumes": [
                     "application/json"
@@ -270,6 +298,13 @@ var doc = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:write"
+                        ]
+                    }
+                ],
                 "description": "update me",
                 "consumes": [
                     "application/json"
@@ -317,6 +352,13 @@ var doc = `{
         },
         "/me/apps": {
             "get": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "app:me:read"
+                        ]
+                    }
+                ],
                 "description": "Get user's created apps",
                 "consumes": [
                     "application/json"
@@ -367,6 +409,13 @@ var doc = `{
         },
         "/me/connected-apps": {
             "get": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "app:me:read"
+                        ]
+                    }
+                ],
                 "description": "Get user's connected apps",
                 "consumes": [
                     "application/json"
@@ -417,6 +466,13 @@ var doc = `{
         },
         "/me/reset-password": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:change-password"
+                        ]
+                    }
+                ],
                 "description": "Reset my password",
                 "consumes": [
                     "application/json"
@@ -450,6 +506,13 @@ var doc = `{
         },
         "/me/verify": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:verify"
+                        ]
+                    }
+                ],
                 "description": "Verify me",
                 "consumes": [
                     "application/json"
@@ -571,6 +634,13 @@ var doc = `{
         },
         "/oauth/authorize": {
             "post": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:me:authorized-app"
+                        ]
+                    }
+                ],
                 "description": "authorize app",
                 "consumes": [
                     "application/json"
@@ -769,6 +839,13 @@ var doc = `{
         },
         "/users/{uuid}": {
             "get": {
+                "security": [
+                    {
+                        "OAuth2AccessCode": [
+                            "user:all:read"
+                        ]
+                    }
+                ],
                 "description": "get an user by his uuid",
                 "consumes": [
                     "application/json"
@@ -1237,9 +1314,13 @@ var doc = `{
             "authorizationUrl": "https://localhost:9100/oauth/login",
             "tokenUrl": "https://localhost:9100/oauth/token",
             "scopes": {
-                "app:read": " Grants access to read apps",
+                "app:me:read": " Grants access to read self created apps",
+                "app:me:write": " Grants access to write self created apps",
+                "user:me:authorized-app": " Grants access an app to get information about the user",
+                "user:me:change-password": " Grants access to change self password",
                 "user:me:delete": " Grants access to delete self user",
                 "user:me:read": " Grants access to read self user",
+                "user:me:verify": " Grants access to verify created user",
                 "user:me:write": " Grants access to write self user"
             }
         }

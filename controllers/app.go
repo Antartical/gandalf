@@ -57,6 +57,7 @@ type AppController struct {
 // @Success 201 {object} serializers.AppSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[app:me:write]
 // @Router /apps [post]
 func (controller AppController) CreateApp(c *gin.Context) {
 	var input validators.AppCreateData
@@ -85,6 +86,7 @@ func (controller AppController) CreateApp(c *gin.Context) {
 // @Success 200 {object} serializers.AppSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[app:all:read]
 // @Router /apps/{uuid} [get]
 func (controller AppController) ReadApp(c *gin.Context) {
 	var input validators.AppReadData
