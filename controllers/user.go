@@ -35,43 +35,12 @@ func RegisterUserRoutes(
 		publicRoutes.POST("", controller.CreateUser)
 	}
 
-	verifyRoutes := router.Group("/users")
-	{
-		scopes := []string{security.ScopeUserVerify}
-		verifyRoutes.Use(authBearerMiddleware.HasScopes(scopes))
-
-		verifyRoutes.POST("/me/verify", controller.VerificateUser)
-	}
-
 	readRoutes := router.Group("/users")
 	{
-		scopes := []string{security.ScopeUserRead}
+		scopes := []string{security.ScopeUserReadAll}
 		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
-		readRoutes.GET("/me", controller.Me)
 		readRoutes.GET(":uuid", controller.ReadUser)
-	}
-
-	updateRoutes := router.Group("/users")
-	{
-		scopes := []string{security.ScopeUserWrite}
-		updateRoutes.Use(authBearerMiddleware.HasScopes(scopes))
-		updateRoutes.PATCH("/me", controller.UpdateUser)
-	}
-
-	deleteRoutes := router.Group("/users")
-	{
-		scopes := []string{security.ScopeUserDelete}
-		deleteRoutes.Use(authBearerMiddleware.HasScopes(scopes))
-		deleteRoutes.DELETE("/me", controller.DeleteUser)
-	}
-
-	changePasswordRoutes := router.Group("/users")
-	{
-		scopes := []string{security.ScopeUserChangePassword}
-		changePasswordRoutes.Use(authBearerMiddleware.HasScopes(scopes))
-
-		changePasswordRoutes.POST("/me/reset-password", controller.ResetUserPassword)
 	}
 }
 
@@ -124,38 +93,9 @@ func (controller UserController) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, serializers.NewUserSerializer(*user))
 }
 
-// @Summary Update user
-// @Description updates an user
-// @ID user-update
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param user body validators.UserUpdateData true "Updates the user with the given data"
-// @Success 200 {object} serializers.UserSerializer
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/me [patch]
-func (controller UserController) UpdateUser(c *gin.Context) {
-	user := controller.authMiddleware.GetAuthorizedUser(c)
-
-	var input validators.UserUpdateData
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
-		return
-	}
-
-	user, err := controller.userService.Update(user.UUID, input)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
-}
-
-// @Summary Get user
+// @Summary Get an user
 // @Description get an user by his uuid
-// @ID user-read-uuid
+// @ID user-read
 // @Tags User
 // @Accept json
 // @Produce json
@@ -163,6 +103,7 @@ func (controller UserController) UpdateUser(c *gin.Context) {
 // @Success 200 {object} serializers.UserSerializer
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
+// @Security OAuth2AccessCode[user:all:read]
 // @Router /users/{uuid} [get]
 func (controller UserController) ReadUser(c *gin.Context) {
 	var input validators.UserReadData
@@ -178,73 +119,4 @@ func (controller UserController) ReadUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
-}
-
-// @Summary Get me
-// @Description get the user who performs the request
-// @ID user-read-me
-// @Tags User
-// @Accept json
-// @Produce json
-// @Success 200 {object} serializers.UserSerializer
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/me [get]
-func (controller UserController) Me(c *gin.Context) {
-	user := controller.authMiddleware.GetAuthorizedUser(c)
-	c.JSON(http.StatusOK, serializers.NewUserSerializer(*user))
-}
-
-// @Summary Delete me
-// @Description deletes the user who perform the request
-// @ID user-delete-me
-// @Tags User
-// @Accept json
-// @Produce json
-// @Success 204
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/me [delete]
-func (controller UserController) DeleteUser(c *gin.Context) {
-	user := controller.authMiddleware.GetAuthorizedUser(c)
-	if err := controller.userService.Delete(user.UUID); err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
-		return
-	}
-	c.JSON(http.StatusNoContent, gin.H{})
-}
-
-// @Summary Verify user
-// @Description Verify an user
-// @ID user-verify
-// @Tags User
-// @Accept json
-// @Produce json
-// @Success 204
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/me/verify [post]
-func (controller UserController) VerificateUser(c *gin.Context) {
-	controller.userService.Verificate(controller.authMiddleware.GetAuthorizedUser(c))
-	c.JSON(http.StatusNoContent, nil)
-}
-
-// @Summary Reset user password
-// @Description Reset user password
-// @ID user-reset-password
-// @Tags User
-// @Accept json
-// @Produce json
-// @Success 204
-// @Failure 400 {object} helpers.HTTPError
-// @Failure 403 {object} helpers.HTTPError
-// @Router /users/me/reset-password [post]
-func (controller UserController) ResetUserPassword(c *gin.Context) {
-	var input validators.UserResetPasswordData
-	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
-		return
-	}
-	controller.userService.ResetPassword(controller.authMiddleware.GetAuthorizedUser(c), input.Password)
-	c.JSON(http.StatusNoContent, nil)
 }

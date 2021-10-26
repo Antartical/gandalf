@@ -16,7 +16,7 @@ func TestScope(t *testing.T) {
 		scope.UnmarshalJSON([]byte(security.ScopeAppRead))
 
 		marshaledScope, _ := scope.MarshalJSON()
-		expectedMarshaledScope := "\"app:read\""
+		expectedMarshaledScope := "\"app:me:read\""
 
 		assert.Equal(security.ScopeAppRead, scope.ToString())
 		assert.Equal(expectedMarshaledScope, string(marshaledScope))

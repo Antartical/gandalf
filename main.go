@@ -23,10 +23,14 @@ import (
 // @securitydefinitions.oauth2.accessCode OAuth2AccessCode
 // @tokenUrl https://localhost:9100/oauth/token
 // @authorizationurl https://localhost:9100/oauth/login
+// @scope.user:me:verify Grants access to verify created user
+// @scope.user:me:change-password Grants access to change self password
 // @scope.user:me:read Grants access to read self user
 // @scope.user:me:write Grants access to write self user
 // @scope.user:me:delete Grants access to delete self user
-// @scope.app:read Grants access to read apps
+// @scope.user:me:authorized-app Grants access an app to get information about the user
+// @scope.app:me:write Grants access to write self created apps
+// @scope.app:me:read Grants access to read self created apps
 func main() {
 	docs.SwaggerInfo.Title = "Gandalf API"
 	router := gin.Default()

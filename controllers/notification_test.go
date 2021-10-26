@@ -44,7 +44,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/verify", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/verify-user", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -68,7 +68,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/verify", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/verify-user", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -90,7 +90,7 @@ func TestUserResendVerificationEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/verify", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/verify-user", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -117,7 +117,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/reset-password", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/reset-user-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -141,7 +141,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/reset-password", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/reset-user-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -163,7 +163,7 @@ func TestUserResendResetPasswordEmail(t *testing.T) {
 		})
 
 		recorder := httptest.NewRecorder()
-		request, _ := http.NewRequest("POST", "/notifications/emails/reset-password", bytes.NewBuffer(payload))
+		request, _ := http.NewRequest("POST", "/notifications/emails/reset-user-password", bytes.NewBuffer(payload))
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 

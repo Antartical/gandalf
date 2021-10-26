@@ -14,6 +14,46 @@ definitions:
         example: status bad request
         type: string
     type: object
+  serializers.AppSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.appDataSerializer'
+      type:
+        example: app
+        type: string
+    type: object
+  serializers.CursorSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.cursorDataSerializer'
+      type:
+        example: cursor
+        type: string
+    type: object
+  serializers.PaginatedAppsPublicSerializer:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/serializers.appPublicDataSerializer'
+        type: array
+      meta:
+        $ref: '#/definitions/serializers.paginatedAppsSerializerMeta'
+      type:
+        example: app
+        type: string
+    type: object
+  serializers.PaginatedAppsSerializer:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/serializers.appDataSerializer'
+        type: array
+      meta:
+        $ref: '#/definitions/serializers.paginatedAppsSerializerMeta'
+      type:
+        example: app
+        type: string
+    type: object
   serializers.TokensSerializer:
     properties:
       access_token:
@@ -37,6 +77,68 @@ definitions:
         example: user
         type: string
     type: object
+  serializers.appDataSerializer:
+    properties:
+      client_id:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+      client_secret:
+        example: iuhgf3874tiu34gtwerbguv3iu74
+        type: string
+      icon_url:
+        example: https://rb.gy/1akgfo
+        type: string
+      name:
+        example: MyApp
+        type: string
+      redirect_urls:
+        example:
+        - http://localhost:/callback
+        items:
+          type: string
+        type: array
+      uuid:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+    type: object
+  serializers.appPublicDataSerializer:
+    properties:
+      icon_url:
+        example: https://rb.gy/1akgfo
+        type: string
+      name:
+        example: MyApp
+        type: string
+      uuid:
+        example: 4722679b-5a48-4e85-9084-605e8df610f4
+        type: string
+    type: object
+  serializers.cursorDataSerializer:
+    properties:
+      actual:
+        example: 4
+        type: integer
+      next:
+        example: 6
+        type: integer
+      previous:
+        example: 5
+        type: integer
+      size:
+        example: 5
+        type: integer
+      total_objects:
+        example: 100
+        type: integer
+      total_pages:
+        example: 20
+        type: integer
+    type: object
+  serializers.paginatedAppsSerializerMeta:
+    properties:
+      cursor:
+        $ref: '#/definitions/serializers.CursorSerializer'
+    type: object
   serializers.userDataSerializer:
     properties:
       birthday:
@@ -57,6 +159,23 @@ definitions:
       uuid:
         example: 4722679b-5a48-4e85-9084-605e8df610f4
         type: string
+    type: object
+  validators.AppCreateData:
+    properties:
+      icon_url:
+        example: http://youriconurl.dev
+        type: string
+      name:
+        example: MySuperApp
+        type: string
+      redirect_urls:
+        example:
+        - http://yourredirecturl.dev
+        items:
+          type: string
+        type: array
+    required:
+    - name
     type: object
   validators.AuthTokens:
     properties:
@@ -179,6 +298,73 @@ info:
   title: Gandalf API
   version: "1.0"
 paths:
+  /apps:
+    post:
+      consumes:
+      - application/json
+      description: creates an app
+      operationId: app-create
+      parameters:
+      - description: Creates an app
+        in: body
+        name: app
+        required: true
+        schema:
+          $ref: '#/definitions/validators.AppCreateData'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/serializers.AppSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:write
+      summary: Creates a new app
+      tags:
+      - App
+  /apps/{uuid}:
+    get:
+      consumes:
+      - application/json
+      description: get an app by his uuid
+      operationId: app-read
+      parameters:
+      - description: App uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.AppSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:all:read
+      summary: Get an app
+      tags:
+      - App
   /auth/login:
     post:
       consumes:
@@ -219,7 +405,7 @@ paths:
       parameters:
       - description: Refresh the given access token with the refresh one
         in: body
-        name: user
+        name: tokens
         required: true
         schema:
           $ref: '#/definitions/validators.AuthTokens'
@@ -237,6 +423,212 @@ paths:
       summary: Refresh
       tags:
       - Auth
+  /me:
+    delete:
+      consumes:
+      - application/json
+      description: deletes the user who perform the request
+      operationId: me-delete
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:delete
+      summary: Delete me
+      tags:
+      - Me
+    get:
+      consumes:
+      - application/json
+      description: get the user who performs the request
+      operationId: me-read
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:read
+      summary: Get me
+      tags:
+      - Me
+    patch:
+      consumes:
+      - application/json
+      description: update me
+      operationId: me-update
+      parameters:
+      - description: Updates the user with the given data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/validators.UserUpdateData'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.UserSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:write
+      summary: Update me
+      tags:
+      - Me
+  /me/apps:
+    get:
+      consumes:
+      - application/json
+      description: Get user's created apps
+      operationId: me-apps
+      parameters:
+      - description: cursor's page
+        in: query
+        name: page
+        type: integer
+      - description: cursor's limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.PaginatedAppsSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:read
+      summary: Get user's created apps
+      tags:
+      - Me
+  /me/connected-apps:
+    get:
+      consumes:
+      - application/json
+      description: Get user's connected apps
+      operationId: me-connected-apps
+      parameters:
+      - description: cursor's page
+        in: query
+        name: page
+        type: integer
+      - description: cursor's limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.PaginatedAppsPublicSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - app:me:read
+      summary: Get user's connected apps
+      tags:
+      - Me
+  /me/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset my password
+      operationId: me-reset-password
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:change-password
+      summary: Reset my password
+      tags:
+      - Me
+  /me/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify me
+      operationId: me-verify
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
+      security:
+      - OAuth2AccessCode:
+        - user:me:verify
+      summary: Verify me
+      tags:
+      - Me
   /notifications/emails/reset-password:
     post:
       consumes:
@@ -313,6 +705,9 @@ paths:
       responses:
         "302":
           description: ""
+      security:
+      - OAuth2AccessCode:
+        - user:me:authorized-app
       summary: Authorize an app to get the user data
       tags:
       - Oauth
@@ -431,7 +826,7 @@ paths:
       consumes:
       - application/json
       description: get an user by his uuid
-      operationId: user-read-uuid
+      operationId: user-read
       parameters:
       - description: User uuid
         in: path
@@ -453,126 +848,10 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/helpers.HTTPError'
-      summary: Get user
-      tags:
-      - User
-  /users/me:
-    delete:
-      consumes:
-      - application/json
-      description: deletes the user who perform the request
-      operationId: user-delete-me
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Delete me
-      tags:
-      - User
-    get:
-      consumes:
-      - application/json
-      description: get the user who performs the request
-      operationId: user-read-me
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/serializers.UserSerializer'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Get me
-      tags:
-      - User
-    patch:
-      consumes:
-      - application/json
-      description: updates an user
-      operationId: user-update
-      parameters:
-      - description: Updates the user with the given data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/validators.UserUpdateData'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/serializers.UserSerializer'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Update user
-      tags:
-      - User
-  /users/me/reset-password:
-    post:
-      consumes:
-      - application/json
-      description: Reset user password
-      operationId: user-reset-password
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Reset user password
-      tags:
-      - User
-  /users/me/verify:
-    post:
-      consumes:
-      - application/json
-      description: Verify an user
-      operationId: user-verify
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.HTTPError'
-      summary: Verify user
+      security:
+      - OAuth2AccessCode:
+        - user:all:read
+      summary: Get an user
       tags:
       - User
 securityDefinitions:
@@ -580,9 +859,14 @@ securityDefinitions:
     authorizationUrl: https://localhost:9100/oauth/login
     flow: accessCode
     scopes:
-      app:read: ' Grants access to read apps'
+      app:me:read: ' Grants access to read self created apps'
+      app:me:write: ' Grants access to write self created apps'
+      user:me:authorized-app: ' Grants access an app to get information about the
+        user'
+      user:me:change-password: ' Grants access to change self password'
       user:me:delete: ' Grants access to delete self user'
       user:me:read: ' Grants access to read self user'
+      user:me:verify: ' Grants access to verify created user'
       user:me:write: ' Grants access to write self user'
     tokenUrl: https://localhost:9100/oauth/token
     type: oauth2

@@ -27,8 +27,8 @@ func RegisterNotificationRoutes(
 
 	publicRoutes := router.Group("/notifications/emails")
 	{
-		publicRoutes.POST("/verify", controller.UserVerificationEmail)
-		publicRoutes.POST("/reset-password", controller.UserResetPasswordEmail)
+		publicRoutes.POST("/verify-user", controller.UserVerificationEmail)
+		publicRoutes.POST("/reset-user-password", controller.UserResetPasswordEmail)
 	}
 
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"gandalf/helpers"
 	"gandalf/middlewares"
 	"gandalf/models"
 	"gandalf/security"
@@ -79,6 +80,14 @@ func (service *mockAppService) Update(uuid uuid.UUID, appData validators.AppUpda
 func (service *mockAppService) Delete(uuid uuid.UUID) error {
 	*service.deleteAppRecorder = deleteAppRecorder{uuid}
 	return service.deleteError
+}
+
+func (service *mockAppService) ListApps(user models.User, cursor *helpers.Cursor) []models.App {
+	return []models.App{}
+}
+
+func (service *mockAppService) ListConnectedApps(user models.User, cursor *helpers.Cursor) []models.App {
+	return []models.App{}
 }
 
 func newMockedAppService(createError error, readError error, readByClientError error, updateError error, deleteError error) mockAppService {

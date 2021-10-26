@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/helpers"
 	"gandalf/models"
 	"gandalf/validators"
 
@@ -14,6 +15,8 @@ type IAppService interface {
 	ReadByClientID(clientID uuid.UUID) (*models.App, error)
 	Update(uuid.UUID, validators.AppUpdateData) (*models.App, error)
 	Delete(uuid uuid.UUID) error
+	ListApps(models.User, *helpers.Cursor) []models.App
+	ListConnectedApps(models.User, *helpers.Cursor) []models.App
 }
 
 // App services helps you to manage the app model with the database
@@ -93,4 +96,23 @@ func (service AppService) Delete(uuid uuid.UUID) error {
 		return AppNotFoundError{err}
 	}
 	return nil
+}
+
+// List all apps created by the given user
+func (service AppService) ListApps(user models.User, cursor *helpers.Cursor) []models.App {
+	var apps []models.App
+	var count int64
+	service.db.Model(&models.App{}).Where(&models.App{UserID: user.ID}).Count(&count)
+	service.db.Scopes(helpers.DBPaginate(cursor.Page, cursor.PageSize)).Where(&models.App{UserID: user.ID}).Find(&apps)
+	cursor.Update(int(count))
+	return apps
+}
+
+// List all user connected apps
+func (service AppService) ListConnectedApps(user models.User, cursor *helpers.Cursor) []models.App {
+	var apps []models.App
+	count := service.db.Model(user).Association("ConnectedApps").Count()
+	service.db.Scopes(helpers.DBPaginate(cursor.Page, cursor.PageSize)).Model(user).Association("ConnectedApps").Find(&apps)
+	cursor.Update(int(count))
+	return apps
 }

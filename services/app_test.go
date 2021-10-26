@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gandalf/helpers"
 	"gandalf/tests"
 	"gandalf/validators"
 	"testing"
@@ -203,6 +204,40 @@ func TestAppServiceDelete(t *testing.T) {
 
 		err := service.Delete(app.UUID)
 		assert.Error(err, AppNotFoundError{nil}.Error())
+	})
+
+}
+
+func TestAppServiceListApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test list apps", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+
+		app := tests.AppFactory()
+		db.Create(&app)
+
+		cursor := helpers.NewCursor(0, 30)
+		assert.Equal(app.ID, service.ListApps(app.User, &cursor)[0].ID)
+		db.Delete(&app)
+	})
+
+}
+
+func TestAppServiceListConnectedApps(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test list apps", func(t *testing.T) {
+		db := tests.NewTestDatabase(false)
+		service := AppService{db}
+		app := tests.AppFactory()
+		db.Create(&app)
+		db.Model(&app).Association("ConnectedUsers").Append(&app.User)
+
+		cursor := helpers.NewCursor(0, 30)
+		assert.Equal(app.ID, service.ListConnectedApps(app.User, &cursor)[0].ID)
+		db.Delete(&app)
 	})
 
 }
