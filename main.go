@@ -22,7 +22,7 @@ import (
 // @x-extension-openapi {"example": "value on a json format"}
 // @securitydefinitions.oauth2.accessCode OAuth2AccessCode
 // @tokenUrl https://localhost:9100/oauth/token
-// @authorizationurl https://localhost:9100/oauth/login
+// @authorizationurl https://localhost:3000/oauth
 // @scope.user:me:verify Grants access to verify created user
 // @scope.user:me:change-password Grants access to change self password
 // @scope.user:me:read Grants access to read self user
@@ -38,6 +38,7 @@ func main() {
 	// Cors configuration
 	config := cors.DefaultConfig()
 	config.AllowOrigins = strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+	config.AllowCredentials = true
 	router.Use(cors.New(config))
 
 	routes.Routes(router)

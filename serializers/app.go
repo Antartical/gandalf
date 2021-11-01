@@ -28,6 +28,12 @@ type AppSerializer struct {
 	Data       appDataSerializer `json:"data"`
 }
 
+// App public serializer
+type AppPublicSerializer struct {
+	ObjectType string                  `json:"type" example:"app"`
+	Data       appPublicDataSerializer `json:"data"`
+}
+
 type paginatedAppsSerializerMeta struct {
 	Cursor CursorSerializer `json:"cursor"`
 }
@@ -56,6 +62,19 @@ func NewAppSerializer(app models.App) AppSerializer {
 			Name:         app.Name,
 			IconUrl:      app.IconUrl,
 			RedirectUrls: app.RedirectUrls,
+		},
+	}
+}
+
+// Creates a new app serializer and fills it with
+// the given user data.
+func NewAppPublicSerializer(app models.App) AppPublicSerializer {
+	return AppPublicSerializer{
+		ObjectType: "app",
+		Data: appPublicDataSerializer{
+			UUID:    app.UUID,
+			Name:    app.Name,
+			IconUrl: app.IconUrl,
 		},
 	}
 }

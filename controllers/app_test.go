@@ -148,3 +148,52 @@ func TestReadApp(t *testing.T) {
 		assert.Equal(http.StatusNotFound, recorder.Result().StatusCode)
 	})
 }
+
+func TestReadAppByClientID(t *testing.T) {
+	assert := require.New(t)
+
+	t.Run("Test read app successfully", func(t *testing.T) {
+		user := tests.UserFactory()
+		authBearerMiddleware := newMockAuthBearerMiddleware(&user)
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		router := setupAppRouter(authBearerMiddleware, &appService)
+
+		recorder := httptest.NewRecorder()
+		uuid, _ := uuid.NewV4()
+		url := fmt.Sprintf("/apps/public/%s", uuid.String())
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(http.StatusOK, recorder.Result().StatusCode)
+	})
+
+	t.Run("Test read app wrong payload", func(t *testing.T) {
+		user := tests.UserFactory()
+		authBearerMiddleware := newMockAuthBearerMiddleware(&user)
+		appService := newMockedAppService(nil, nil, nil, nil, nil)
+		router := setupAppRouter(authBearerMiddleware, &appService)
+
+		recorder := httptest.NewRecorder()
+		url := "/apps/public/invent"
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(http.StatusBadRequest, recorder.Result().StatusCode)
+	})
+
+	t.Run("Test read app db error", func(t *testing.T) {
+		expectedError := errors.New("Whoops!")
+		user := tests.UserFactory()
+		authBearerMiddleware := newMockAuthBearerMiddleware(&user)
+		appService := newMockedAppService(nil, nil, expectedError, nil, nil)
+		router := setupAppRouter(authBearerMiddleware, &appService)
+
+		recorder := httptest.NewRecorder()
+		uuid, _ := uuid.NewV4()
+		url := fmt.Sprintf("/apps/public/%s", uuid.String())
+		request, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(http.StatusNotFound, recorder.Result().StatusCode)
+	})
+}
