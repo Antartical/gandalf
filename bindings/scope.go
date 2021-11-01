@@ -24,6 +24,7 @@ var validScopes = map[string]bool{
 	security.ScopeUserWrite:          true,
 	security.ScopeUserDelete:         true,
 	security.ScopeAppRead:            true,
+	security.ScopeAppWrite:           true,
 }
 
 // Scope binding

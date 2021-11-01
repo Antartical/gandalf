@@ -84,7 +84,7 @@ func main() {
 			data := map[string]interface{}{
 				"name":          flags["name"].Value,
 				"icon_url":      flags["iconurl"].Value,
-				"redirect_urls": []string{url},
+				"redirect_urls": fmt.Sprintf("[\"%s\"]", url),
 			}
 			var input validators.AppCreateData
 			if err := mapstructure.Decode(data, &input); err != nil {
@@ -92,6 +92,8 @@ func main() {
 				os.Exit(1)
 			}
 
+			input.IconUrl, _ = flags["iconurl"].GetString()
+			input.RedirectUrls = []string{url}
 			db := connections.NewGormPostgresConnection().Connect()
 			appService := services.NewAppService(db)
 			var user *models.User
@@ -100,13 +102,14 @@ func main() {
 				fmt.Print("You need to create an user first\n")
 				os.Exit(1)
 			}
+
 			app, err := appService.Create(input, *user)
 			if err != nil {
 				fmt.Print(err)
 				os.Exit(1)
 			}
 
-			fmt.Printf("Client ID: %s\nClient secret: %s\n", app.ClientID, app.ClientSecret)
+			fmt.Printf("Client ID: %s\nClient secret: %s\nRedirect Url: %s", app.ClientID, app.ClientSecret, app.RedirectUrls)
 		})
 
 	// parse command-line arguments
