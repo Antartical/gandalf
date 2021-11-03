@@ -18,11 +18,12 @@ import (
 // @title Gandalf API
 // @version 1.0
 // @description Oauth2 server.
-// @host localhost:9100
+// @host localhost:9100/
 // @x-extension-openapi {"example": "value on a json format"}
 // @securitydefinitions.oauth2.accessCode OAuth2AccessCode
 // @tokenUrl http://localhost:9100/oauth/token
 // @authorizationurl http://localhost:3000/oauth
+// @oauth2RedirectUrl http://localhost:9100/swagger/oauth2-redirect.html
 // @scope.user:me:verify Grants access to verify created user
 // @scope.user:me:change-password Grants access to change self password
 // @scope.user:me:read Grants access to read self user

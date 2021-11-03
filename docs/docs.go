@@ -1393,7 +1393,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:9100",
+	Host:        "localhost:9100/",
 	BasePath:    "",
 	Schemes:     []string{},
 	Title:       "Gandalf API",

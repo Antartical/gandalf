@@ -299,7 +299,7 @@ definitions:
         example: "+34666123456"
         type: string
     type: object
-host: localhost:9100
+host: localhost:9100/
 info:
   contact: {}
   description: Oauth2 server.
