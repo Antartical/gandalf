@@ -26,4 +26,9 @@ func TestCursor(t *testing.T) {
 		assert.Equal(expectedNext, *cursor.NextPage)
 		assert.Equal(expectedNumberOfPages, cursor.TotalPages)
 	})
+
+	t.Run("Test Cursor default", func(t *testing.T) {
+		cursor := NewCursor(0, 0)
+		assert.Equal(5, cursor.PageSize)
+	})
 }
