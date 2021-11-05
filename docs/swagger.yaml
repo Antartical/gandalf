@@ -663,7 +663,7 @@ paths:
       summary: Verify me
       tags:
       - Me
-  /notifications/emails/reset-password:
+  /notifications/emails/reset-user-password:
     post:
       consumes:
       - application/json
@@ -692,7 +692,7 @@ paths:
       summary: Sends reset password email
       tags:
       - Notification
-  /notifications/emails/verify:
+  /notifications/emails/verify-user:
     post:
       consumes:
       - application/json

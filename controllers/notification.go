@@ -50,7 +50,7 @@ type NotificationController struct {
 // @Success 204
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
-// @Router /notifications/emails/verify [post]
+// @Router /notifications/emails/verify-user [post]
 func (controller NotificationController) UserVerificationEmail(c *gin.Context) {
 	var input validators.UserResendEmail
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -90,7 +90,7 @@ func (controller NotificationController) UserVerificationEmail(c *gin.Context) {
 // @Success 204
 // @Failure 400 {object} helpers.HTTPError
 // @Failure 403 {object} helpers.HTTPError
-// @Router /notifications/emails/reset-password [post]
+// @Router /notifications/emails/reset-user-password [post]
 func (controller NotificationController) UserResetPasswordEmail(c *gin.Context) {
 	var input validators.UserResendEmail
 	if err := c.ShouldBindJSON(&input); err != nil {

@@ -583,7 +583,7 @@ var doc = `{
                 }
             }
         },
-        "/notifications/emails/reset-password": {
+        "/notifications/emails/reset-user-password": {
             "post": {
                 "description": "Sends reset password email",
                 "consumes": [
@@ -627,7 +627,7 @@ var doc = `{
                 }
             }
         },
-        "/notifications/emails/verify": {
+        "/notifications/emails/verify-user": {
             "post": {
                 "description": "Sends verification email",
                 "consumes": [
