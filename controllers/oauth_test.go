@@ -365,6 +365,7 @@ func TestOauth2Token(t *testing.T) {
 
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("POST", "/oauth/token", bytes.NewBuffer(payload))
+		request.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(recorder, request)
 		json.Unmarshal(recorder.Body.Bytes(), &response)
 
@@ -395,6 +396,7 @@ func TestOauth2Token(t *testing.T) {
 
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("POST", "/oauth/token", bytes.NewBuffer(payload))
+		request.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(recorder, request)
 
 		assert.Equal(http.StatusBadRequest, recorder.Result().StatusCode)
@@ -425,6 +427,7 @@ func TestOauth2Token(t *testing.T) {
 
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("POST", "/oauth/token", bytes.NewBuffer(payload))
+		request.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(recorder, request)
 
 		assert.Equal(http.StatusBadRequest, recorder.Result().StatusCode)
@@ -455,6 +458,7 @@ func TestOauth2Token(t *testing.T) {
 
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest("POST", "/oauth/token", bytes.NewBuffer(payload))
+		request.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(recorder, request)
 
 		assert.Equal(http.StatusUnauthorized, recorder.Result().StatusCode)
