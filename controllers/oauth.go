@@ -128,7 +128,7 @@ func (controller Oauth2Controller) Oauth2Authorize(c *gin.Context) {
 // @Router /oauth/token [post]
 func (controller Oauth2Controller) Oauth2Token(c *gin.Context) {
 	var input validators.OauthExchangeToken
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
 		return
 	}

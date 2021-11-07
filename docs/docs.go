@@ -77,6 +77,45 @@ var doc = `{
                 }
             }
         },
+        "/apps/public/{clientID}": {
+            "get": {
+                "description": "get an app by his clientID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "App"
+                ],
+                "summary": "Get an app",
+                "operationId": "app-read-client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App uuid",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.AppPublicSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/apps/{uuid}": {
             "get": {
                 "security": [
@@ -544,7 +583,7 @@ var doc = `{
                 }
             }
         },
-        "/notifications/emails/reset-password": {
+        "/notifications/emails/reset-user-password": {
             "post": {
                 "description": "Sends reset password email",
                 "consumes": [
@@ -588,7 +627,7 @@ var doc = `{
                 }
             }
         },
-        "/notifications/emails/verify": {
+        "/notifications/emails/verify-user": {
             "post": {
                 "description": "Sends verification email",
                 "consumes": [
@@ -910,6 +949,18 @@ var doc = `{
                 "error": {
                     "type": "string",
                     "example": "status bad request"
+                }
+            }
+        },
+        "serializers.AppPublicSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/serializers.appPublicDataSerializer"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "app"
                 }
             }
         },
@@ -1311,8 +1362,8 @@ var doc = `{
         "OAuth2AccessCode": {
             "type": "oauth2",
             "flow": "accessCode",
-            "authorizationUrl": "https://localhost:9100/oauth/login",
-            "tokenUrl": "https://localhost:9100/oauth/token",
+            "authorizationUrl": "http://localhost:3000/oauth",
+            "tokenUrl": "http://localhost:9100/oauth/token",
             "scopes": {
                 "app:me:read": " Grants access to read self created apps",
                 "app:me:write": " Grants access to write self created apps",
@@ -1342,7 +1393,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:9100",
+	Host:        "localhost:9100/",
 	BasePath:    "",
 	Schemes:     []string{},
 	Title:       "Gandalf API",
@@ -1381,5 +1432,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

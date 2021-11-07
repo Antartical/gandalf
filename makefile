@@ -51,7 +51,7 @@ ci.docker.login:
 ci.test:
 	@docker exec gandalf go test -v -covermode=count -coverprofile=coverage.out ./...
 
-logs:
+logs: 
 	@docker logs -f $(shell docker-compose ps -q gandalf)
 
 sh:

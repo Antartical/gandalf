@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:9100",
+    "host": "localhost:9100/",
     "paths": {
         "/apps": {
             "post": {
@@ -55,6 +55,45 @@
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/apps/public/{clientID}": {
+            "get": {
+                "description": "get an app by his clientID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "App"
+                ],
+                "summary": "Get an app",
+                "operationId": "app-read-client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App uuid",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/serializers.AppPublicSerializer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/helpers.HTTPError"
                         }
@@ -529,7 +568,7 @@
                 }
             }
         },
-        "/notifications/emails/reset-password": {
+        "/notifications/emails/reset-user-password": {
             "post": {
                 "description": "Sends reset password email",
                 "consumes": [
@@ -573,7 +612,7 @@
                 }
             }
         },
-        "/notifications/emails/verify": {
+        "/notifications/emails/verify-user": {
             "post": {
                 "description": "Sends verification email",
                 "consumes": [
@@ -895,6 +934,18 @@
                 "error": {
                     "type": "string",
                     "example": "status bad request"
+                }
+            }
+        },
+        "serializers.AppPublicSerializer": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/serializers.appPublicDataSerializer"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "app"
                 }
             }
         },
@@ -1296,8 +1347,8 @@
         "OAuth2AccessCode": {
             "type": "oauth2",
             "flow": "accessCode",
-            "authorizationUrl": "https://localhost:9100/oauth/login",
-            "tokenUrl": "https://localhost:9100/oauth/token",
+            "authorizationUrl": "http://localhost:3000/oauth",
+            "tokenUrl": "http://localhost:9100/oauth/token",
             "scopes": {
                 "app:me:read": " Grants access to read self created apps",
                 "app:me:write": " Grants access to write self created apps",

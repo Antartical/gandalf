@@ -24,6 +24,11 @@ func RegisterAppRoutes(
 		authMiddleware: authBearerMiddleware,
 	}
 
+	publicRoutes := router.Group("/apps")
+	{
+		publicRoutes.GET("/public/:uuid", controller.ReadByClientID)
+	}
+
 	writeRoutes := router.Group("/apps")
 	{
 		scopes := []string{security.ScopeAppWrite}
@@ -37,7 +42,7 @@ func RegisterAppRoutes(
 		scopes := []string{security.ScopeAppReadAll}
 		readRoutes.Use(authBearerMiddleware.HasScopes(scopes))
 
-		readRoutes.GET(":uuid", controller.ReadApp)
+		readRoutes.GET("/:uuid", controller.ReadApp)
 	}
 }
 
@@ -102,4 +107,30 @@ func (controller AppController) ReadApp(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, serializers.NewAppSerializer(*app))
+}
+
+// @Summary Get an app
+// @Description get an app by his clientID
+// @ID app-read-client
+// @Tags App
+// @Accept json
+// @Produce json
+// @Param uuid path string true "App uuid"
+// @Success 200 {object} serializers.AppPublicSerializer
+// @Failure 400 {object} helpers.HTTPError
+// @Router /apps/public/{clientID} [get]
+func (controller AppController) ReadByClientID(c *gin.Context) {
+	var input validators.AppReadData
+	if err := c.ShouldBindUri(&input); err != nil {
+		helpers.AbortWithStatus(c, http.StatusBadRequest, err)
+		return
+	}
+
+	uuid, _ := uuid.FromString(input.UUID)
+	app, err := controller.appService.ReadByClientID(uuid)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.NewAppPublicSerializer(*app))
 }

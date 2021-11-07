@@ -26,6 +26,9 @@ func (cursor *Cursor) Update(count int) {
 
 // Creates a new cursor
 func NewCursor(page int, pageSize int) Cursor {
+	if pageSize <= 0 {
+		pageSize = 5
+	}
 	return Cursor{
 		Page:         page,
 		PageSize:     pageSize,

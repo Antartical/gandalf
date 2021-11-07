@@ -32,6 +32,12 @@ func TestAppSerializer(t *testing.T) {
 	})
 
 	t.Run("Test serialize public", func(t *testing.T) {
+		app := tests.AppFactory()
+		appSerializer := NewAppPublicSerializer(app)
+		assert.Equal(app.Name, appSerializer.Data.Name)
+	})
+
+	t.Run("Test serialize public batch", func(t *testing.T) {
 		apps := []models.App{tests.AppFactory()}
 		cursor := helpers.NewCursor(3, 10)
 		appSerializer := NewPaginatedAppsPublicSerializer(apps, cursor)

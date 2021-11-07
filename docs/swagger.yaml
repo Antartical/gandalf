@@ -14,6 +14,14 @@ definitions:
         example: status bad request
         type: string
     type: object
+  serializers.AppPublicSerializer:
+    properties:
+      data:
+        $ref: '#/definitions/serializers.appPublicDataSerializer'
+      type:
+        example: app
+        type: string
+    type: object
   serializers.AppSerializer:
     properties:
       data:
@@ -291,7 +299,7 @@ definitions:
         example: "+34666123456"
         type: string
     type: object
-host: localhost:9100
+host: localhost:9100/
 info:
   contact: {}
   description: Oauth2 server.
@@ -362,6 +370,32 @@ paths:
       security:
       - OAuth2AccessCode:
         - app:all:read
+      summary: Get an app
+      tags:
+      - App
+  /apps/public/{clientID}:
+    get:
+      consumes:
+      - application/json
+      description: get an app by his clientID
+      operationId: app-read-client
+      parameters:
+      - description: App uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/serializers.AppPublicSerializer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.HTTPError'
       summary: Get an app
       tags:
       - App
@@ -629,7 +663,7 @@ paths:
       summary: Verify me
       tags:
       - Me
-  /notifications/emails/reset-password:
+  /notifications/emails/reset-user-password:
     post:
       consumes:
       - application/json
@@ -658,7 +692,7 @@ paths:
       summary: Sends reset password email
       tags:
       - Notification
-  /notifications/emails/verify:
+  /notifications/emails/verify-user:
     post:
       consumes:
       - application/json
@@ -856,7 +890,7 @@ paths:
       - User
 securityDefinitions:
   OAuth2AccessCode:
-    authorizationUrl: https://localhost:9100/oauth/login
+    authorizationUrl: http://localhost:3000/oauth
     flow: accessCode
     scopes:
       app:me:read: ' Grants access to read self created apps'
@@ -868,7 +902,7 @@ securityDefinitions:
       user:me:read: ' Grants access to read self user'
       user:me:verify: ' Grants access to verify created user'
       user:me:write: ' Grants access to write self user'
-    tokenUrl: https://localhost:9100/oauth/token
+    tokenUrl: http://localhost:9100/oauth/token
     type: oauth2
 swagger: "2.0"
 x-extension-openapi:
